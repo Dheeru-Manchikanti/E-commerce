@@ -14,31 +14,31 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
-// Get user data with explicit field selection - force no caching with a timestamp
-$timestamp = time(); // Add this to prevent any potential caching issues
-$db->query("SELECT id, email, password, IFNULL(first_name, '') as first_name, IFNULL(last_name, '') as last_name, 
-           IFNULL(phone, '') as phone, is_active, created_at, 
-           last_login, email_verified, verification_token 
-           FROM users WHERE id = :id");
-$db->bind(':id', $userId);
-$user = $db->single();
-
-// Output the SQL error if any
-if (!$user) {
-    error_log("Failed to retrieve user with ID: $userId at " . date('Y-m-d H:i:s'));
+// Get user data from database
+try {
+    $db->query("SELECT id, email, first_name, last_name, phone FROM users WHERE id = ?");
+    $db->bind(1, $userId);
+    $user = $db->single();
     
-    // Force logout if user not found
-    unset($_SESSION['user_id']);
-    header('Location: login.php');
-    exit();
-}
-
-// Ensure all required user fields are set to prevent warnings
-$requiredFields = ['first_name', 'last_name', 'email', 'phone', 'password', 'is_active', 'email_verified'];
-foreach ($requiredFields as $field) {
-    if (!isset($user[$field])) {
-        $user[$field] = '';
+    if (!$user) {
+        // If no user found, create empty array
+        $user = [
+            'id' => $userId,
+            'email' => $_SESSION['user_email'] ?? '',
+            'first_name' => '',
+            'last_name' => '',
+            'phone' => ''
+        ];
     }
+} catch (Exception $e) {
+    // On error, use session data as fallback
+    $user = [
+        'id' => $userId,
+        'email' => $_SESSION['user_email'] ?? '',
+        'first_name' => '',
+        'last_name' => '',
+        'phone' => ''
+    ];
 }
 
 // Add a dev-only debug feature that can be enabled when needed
@@ -50,13 +50,6 @@ if ($debugMode) {
     echo '<strong>DEBUG - Session Data:</strong><br>';
     echo '<pre>' . print_r($_SESSION, true) . '</pre>';
     echo '</div>';
-}
-
-if (!$user) {
-    // User not found in database (session may be corrupted)
-    unset($_SESSION['user_id']);
-    header('Location: login.php');
-    exit();
 }
 
 // Get user addresses
@@ -202,7 +195,7 @@ include('includes/public_header.php');
                     <a href="#dashboard" class="list-group-item list-group-item-action active" data-bs-toggle="list">Dashboard</a>
                     <a href="#orders" class="list-group-item list-group-item-action" data-bs-toggle="list">My Orders</a>
                     <a href="#addresses" class="list-group-item list-group-item-action" data-bs-toggle="list">My Addresses</a>
-                    <a href="simple_profile.php" class="list-group-item list-group-item-action">My Profile <span class="badge bg-success">New</span></a>
+                    <a href="profile.php" class="list-group-item list-group-item-action">My Profile <span class="badge bg-success">New</span></a>
                     <a href="#password" class="list-group-item list-group-item-action" data-bs-toggle="list">Change Password</a>
                     <a href="logout.php" class="list-group-item list-group-item-action text-danger">Logout</a>
                 </div>
@@ -219,11 +212,8 @@ include('includes/public_header.php');
                             <h5 class="mb-0">Dashboard</h5>
                         </div>
                         <div class="card-body">
-                            <h4 style="color: #4285f4;">Hello, Will!</h4>
+                            <h4 style="color: #4285f4;">Hello, <?php echo htmlspecialchars($user['first_name'] ?? 'User'); ?>!</h4>
                             <p>From your account dashboard you can view your recent orders, manage your shipping and billing addresses, and edit your password and account details.</p>
-                            <div class="alert alert-info">
-                                <p><i class="fas fa-exclamation-circle me-1"></i> We've detected some issues with the user profile system. Please use our <a href="simple_profile.php" class="fw-bold">simplified profile page</a> to update your information.</p>
-                            </div>
                             
                             <?php if (count($recentOrders) > 0): ?>
                                 <h5 class="mt-4">Recent Orders</h5>
@@ -396,12 +386,12 @@ include('includes/public_header.php');
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label for="first_name" class="form-label">First Name * (Current: <?php echo $user['first_name']; ?>)</label>
-                                        <input type="text" id="first_name" name="first_name" class="form-control" value="<?php echo $user['first_name']; ?>" required>
+                                        <label for="first_name" class="form-label">First Name * (Current: <?php echo htmlspecialchars($user['first_name'] ?? ''); ?>)</label>
+                                        <input type="text" id="first_name" name="first_name" class="form-control" value="<?php echo htmlspecialchars($user['first_name'] ?? ''); ?>" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="last_name" class="form-label">Last Name *</label>
-                                        <input type="text" id="last_name" name="last_name" class="form-control" value="<?php echo $user['last_name']; ?>" required>
+                                        <input type="text" id="last_name" name="last_name" class="form-control" value="<?php echo htmlspecialchars($user['last_name'] ?? ''); ?>" required>
                                     </div>
                                 </div>
                                 
