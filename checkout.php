@@ -1,4 +1,7 @@
 <?php
+// Start session
+session_start();
+
 // Checkout page
 require_once 'includes/init.php';
 
@@ -22,8 +25,55 @@ $customer = [
     'country' => ''
 ];
 
+// Check if user is logged in
+$isLoggedIn = isset($_SESSION['user_id']);
+$savedAddresses = [];
+
+// If user is logged in, get their information and addresses
+if ($isLoggedIn) {
+    $userId = $_SESSION['user_id'];
+    
+    // Get user data
+    $db->query("SELECT * FROM users WHERE id = :id");
+    $db->bind(':id', $userId);
+    $user = $db->single();
+    
+    if ($user) {
+        // Pre-fill customer information
+        $customer['first_name'] = $user['first_name'];
+        $customer['last_name'] = $user['last_name'];
+        $customer['email'] = $user['email'];
+        $customer['phone'] = $user['phone'] ?? '';
+        
+        // Get saved addresses
+        $db->query("SELECT * FROM user_addresses WHERE user_id = :user_id ORDER BY is_default DESC");
+        $db->bind(':user_id', $userId);
+        $savedAddresses = $db->resultSet();
+    }
+}
+
 // Process form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if using saved address
+    if (isset($_POST['use_saved_address']) && !empty($_POST['saved_address_id']) && $isLoggedIn) {
+        $savedAddressId = (int)$_POST['saved_address_id'];
+        
+        // Get selected address
+        $db->query("SELECT * FROM user_addresses WHERE id = :id AND user_id = :user_id");
+        $db->bind(':id', $savedAddressId);
+        $db->bind(':user_id', $userId);
+        $selectedAddress = $db->single();
+        
+        if ($selectedAddress) {
+            // Use saved address
+            $customer['address'] = $selectedAddress['address'];
+            $customer['city'] = $selectedAddress['city'];
+            $customer['state'] = $selectedAddress['state'];
+            $customer['postal_code'] = $selectedAddress['postal_code'];
+            $customer['country'] = $selectedAddress['country'];
+        }
+    }
+    
     // Validate customer information
     $customer['first_name'] = sanitize($_POST['first_name']);
     if (empty($customer['first_name'])) {
@@ -179,11 +229,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                     $totalAmount += 5.99;
                 }
                 
-                // Create order
-                $sql = "INSERT INTO orders (customer_id, order_number, total_amount, status, shipping_address, billing_address, payment_method)
-                        VALUES (:customer_id, :order_number, :total_amount, 'pending', :shipping_address, :billing_address, :payment_method)";
+                // Create order - associate with user account if logged in
+                $sql = "INSERT INTO orders (customer_id, user_id, order_number, total_amount, status, shipping_address, billing_address, payment_method)
+                        VALUES (:customer_id, :user_id, :order_number, :total_amount, 'pending', :shipping_address, :billing_address, :payment_method)";
                 $db->query($sql);
                 $db->bind(':customer_id', $customerId);
+                $db->bind(':user_id', $isLoggedIn ? $userId : null);
                 $db->bind(':order_number', $orderNumber);
                 $db->bind(':total_amount', $totalAmount);
                 $db->bind(':shipping_address', $shippingAddress);
@@ -234,6 +285,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 // Store order ID in session for confirmation page
                 $_SESSION['last_order_id'] = $orderId;
                 $_SESSION['last_order_number'] = $orderNumber;
+                
+                // If user is logged in and requested to save address
+                if ($isLoggedIn && isset($_POST['save_address'])) {
+                    // Check if this address already exists
+                    $db->query("SELECT id FROM user_addresses WHERE 
+                                user_id = :user_id AND 
+                                address = :address AND 
+                                city = :city AND 
+                                state = :state AND 
+                                postal_code = :postal_code AND 
+                                country = :country");
+                    $db->bind(':user_id', $userId);
+                    $db->bind(':address', $customer['address']);
+                    $db->bind(':city', $customer['city']);
+                    $db->bind(':state', $customer['state']);
+                    $db->bind(':postal_code', $customer['postal_code']);
+                    $db->bind(':country', $customer['country']);
+                    $existingAddress = $db->single();
+                    
+                    if (!$existingAddress) {
+                        // Count user addresses to determine if this is the first one (default)
+                        $db->query("SELECT COUNT(*) as address_count FROM user_addresses WHERE user_id = :user_id");
+                        $db->bind(':user_id', $userId);
+                        $addressCount = $db->single()['address_count'];
+                        $isDefault = ($addressCount == 0) ? 1 : 0;
+                        
+                        // Save the address
+                        $db->query("INSERT INTO user_addresses 
+                                    (user_id, address_type, address, city, state, postal_code, country, is_default) 
+                                    VALUES 
+                                    (:user_id, 'both', :address, :city, :state, :postal_code, :country, :is_default)");
+                        $db->bind(':user_id', $userId);
+                        $db->bind(':address', $customer['address']);
+                        $db->bind(':city', $customer['city']);
+                        $db->bind(':state', $customer['state']);
+                        $db->bind(':postal_code', $customer['postal_code']);
+                        $db->bind(':country', $customer['country']);
+                        $db->bind(':is_default', $isDefault);
+                        $db->execute();
+                    }
+                }
                 
                 // Redirect to confirmation page
                 header('Location: order-confirmation.php');
@@ -339,6 +431,31 @@ include 'includes/public_header.php';
                             <h5 class="mb-0">Customer Information</h5>
                         </div>
                         <div class="card-body">
+                            <?php if ($isLoggedIn && !empty($savedAddresses)): ?>
+                            <!-- Saved Addresses Selection for logged-in users -->
+                            <div class="mb-4">
+                                <label class="form-label">Your Saved Addresses</label>
+                                <select class="form-select" id="saved_address_id" name="saved_address_id">
+                                    <option value="">-- Select an address --</option>
+                                    <?php foreach ($savedAddresses as $address): ?>
+                                        <option value="<?php echo $address['id']; ?>">
+                                            <?php echo htmlspecialchars($address['address'] . ', ' . $address['city'] . ', ' . $address['state'] . ' ' . $address['postal_code'] . ', ' . $address['country']); ?>
+                                            <?php echo $address['is_default'] ? ' (Default)' : ''; ?>
+                                            <?php echo $address['address_type'] !== 'both' ? ' (' . ucfirst($address['address_type']) . ')' : ''; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="d-grid mt-2">
+                                    <button type="submit" name="use_saved_address" class="btn btn-outline-primary btn-sm">
+                                        Use This Address
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <p class="small text-muted">Or fill in a new address below:</p>
+                            </div>
+                            <?php endif; ?>
+                            
                             <!-- Name -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -434,9 +551,48 @@ include 'includes/public_header.php';
                                         </div>
                                     <?php endif; ?>
                                 </div>
+                                <?php if ($isLoggedIn): ?>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="save_address" name="save_address" value="1">
+                                        <label class="form-check-label" for="save_address">
+                                            Save this address to my account
+                                        </label>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Saved Addresses -->
+                    <?php if ($isLoggedIn && !empty($savedAddresses)): ?>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Saved Addresses</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="saved_address" class="form-label">Select a saved address</label>
+                                    <select class="form-select" id="saved_address" name="saved_address_id">
+                                        <option value="">-- Select an address --</option>
+                                        <?php foreach ($savedAddresses as $address): ?>
+                                            <option value="<?php echo $address['id']; ?>" <?php echo (isset($customer['address']) && $customer['address'] == $address['address']) ? 'selected' : ''; ?>>
+                                                <?php echo $address['address'] . ', ' . $address['city'] . ', ' . $address['state'] . ' ' . $address['postal_code'] . ', ' . $address['country']; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="use_saved_address" id="use_saved_address" value="1">
+                                    <label class="form-check-label" for="use_saved_address">
+                                        Use this address for shipping
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                     
                     <!-- Payment Method -->
                     <div class="card mb-4">

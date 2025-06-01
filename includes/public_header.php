@@ -8,6 +8,21 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
         $cartCount += $item['quantity'];
     }
 }
+
+// Check if user is logged in
+$isLoggedIn = isset($_SESSION['user_id']);
+$userFullName = '';
+
+if ($isLoggedIn) {
+    // Get user name for display
+    $userId = $_SESSION['user_id'];
+    $db->query("SELECT CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id = :id");
+    $db->bind(':id', $userId);
+    $user = $db->single();
+    if ($user) {
+        $userFullName = $user['full_name'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -80,8 +95,31 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                         </button>
                     </div>
                 </form>
-                <!-- Cart Link -->
-                <div class="d-flex">
+                <!-- User Account & Cart Links -->
+                <div class="d-flex align-items-center">
+                    <?php if ($isLoggedIn): ?>
+                        <!-- Logged in user menu -->
+                        <div class="dropdown me-3">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i> <?php echo htmlspecialchars($userFullName); ?>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                <li><a class="dropdown-item" href="account.php"><i class="fas fa-user me-2"></i> My Account</a></li>
+                                <li><a class="dropdown-item" href="account.php?tab=orders"><i class="fas fa-shopping-bag me-2"></i> My Orders</a></li>
+                                <li><a class="dropdown-item" href="account.php?tab=addresses"><i class="fas fa-map-marker-alt me-2"></i> My Addresses</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    <?php else: ?>
+                        <!-- Login/Register links -->
+                        <div class="btn-group me-3">
+                            <a href="login.php" class="btn btn-outline-secondary"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
+                            <a href="register.php" class="btn btn-outline-secondary"><i class="fas fa-user-plus me-1"></i> Register</a>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Cart Link -->
                     <a href="cart.php" class="btn btn-outline-primary position-relative">
                         <i class="fas fa-shopping-cart"></i> Cart
                         <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -97,4 +135,4 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     <div class="container mt-4" id="main-content">
         <div id="cartAlerts">
             <?php displayFlashMessage(); ?>
-        </div>
+        </div
