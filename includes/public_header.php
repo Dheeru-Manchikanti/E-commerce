@@ -74,10 +74,10 @@ if ($isLoggedIn) {
                             // Get all parent categories
                             $sql = "SELECT * FROM categories WHERE parent_id IS NULL AND status = 'active' ORDER BY name";
                             $db->query($sql);
-                            $categories = $db->resultSet();
+                            $headerCategories = $db->resultSet();
                             
-                            foreach ($categories as $category) {
-                                echo '<li><a class="dropdown-item" href="category.php?id=' . $category['id'] . '">' . htmlspecialchars($category['name']) . '</a></li>';
+                            foreach ($headerCategories as $headerCategory) {
+                                echo '<li><a class="dropdown-item" href="category.php?id=' . $headerCategory['id'] . '">' . htmlspecialchars($headerCategory['name']) . '</a></li>';
                             }
                             ?>
                         </ul>
