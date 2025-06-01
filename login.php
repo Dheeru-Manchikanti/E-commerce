@@ -47,9 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user && password_verify($password, $user['password'])) {
                 // Check if email is verified
                 if ($user['email_verified']) {
+                    // Debug output to error log
+                    error_log("User login: " . print_r($user, true));
+                    
                     // Set session variables
                     $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+                    $_SESSION['user_name'] = isset($user['first_name']) && isset($user['last_name']) 
+                        ? $user['first_name'] . ' ' . $user['last_name'] 
+                        : 'User';
                     $_SESSION['user_email'] = $user['email'];
                     
                     // Update last login time

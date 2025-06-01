@@ -24,6 +24,15 @@ A PHP-based e-commerce system with admin panel and storefront.
    - Username: admin
    - Password: admin123
 
+## User Authentication
+
+The system includes a complete user authentication system with:
+- User registration and login
+- Profile management via the simple_profile.php page
+- Order history tracking 
+- Address management for shipping and billing
+- Integration with checkout process
+
 ## Requirements
 
 - PHP 7.4+

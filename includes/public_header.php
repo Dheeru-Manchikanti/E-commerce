@@ -105,6 +105,7 @@ if ($isLoggedIn) {
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                 <li><a class="dropdown-item" href="account.php"><i class="fas fa-user me-2"></i> My Account</a></li>
+                                <li><a class="dropdown-item" href="simple_profile.php"><i class="fas fa-id-card me-2"></i> My Profile</a></li>
                                 <li><a class="dropdown-item" href="account.php?tab=orders"><i class="fas fa-shopping-bag me-2"></i> My Orders</a></li>
                                 <li><a class="dropdown-item" href="account.php?tab=addresses"><i class="fas fa-map-marker-alt me-2"></i> My Addresses</a></li>
                                 <li><hr class="dropdown-divider"></li>

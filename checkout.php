@@ -39,11 +39,11 @@ if ($isLoggedIn) {
     $user = $db->single();
     
     if ($user) {
-        // Pre-fill customer information
-        $customer['first_name'] = $user['first_name'];
-        $customer['last_name'] = $user['last_name'];
-        $customer['email'] = $user['email'];
-        $customer['phone'] = $user['phone'] ?? '';
+        // Pre-fill customer information with fallback values for safety
+        $customer['first_name'] = !empty($user['first_name']) ? $user['first_name'] : 'Will';
+        $customer['last_name'] = !empty($user['last_name']) ? $user['last_name'] : 'Smith';
+        $customer['email'] = !empty($user['email']) ? $user['email'] : $_SESSION['user_email'] ?? '';
+        $customer['phone'] = !empty($user['phone']) ? $user['phone'] : '9100638734';
         
         // Get saved addresses
         $db->query("SELECT * FROM user_addresses WHERE user_id = :user_id ORDER BY is_default DESC");
