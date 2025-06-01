@@ -111,14 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         // Process image upload
         $image_main = $product['image_main']; // Keep existing image by default
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $new_image = uploadFile($_FILES['image'], '../uploads/', ['image/jpeg', 'image/png', 'image/gif']);
+            $new_image = uploadFile($_FILES['image'], UPLOADS_DIR, ['image/jpeg', 'image/png', 'image/gif']);
             if ($new_image === false) {
                 $formErrors[] = 'Failed to upload image. Please ensure it is a valid image file (JPG, PNG, or GIF) and less than 2MB.';
             } else {
                 $image_main = $new_image;
                 // Delete old image if exists
-                if ($product['image_main'] && file_exists('../uploads/' . $product['image_main'])) {
-                    unlink('../uploads/' . $product['image_main']);
+                if ($product['image_main'] && file_exists(UPLOADS_DIR . $product['image_main'])) {
+                    unlink(UPLOADS_DIR . $product['image_main']);
                 }
             }
         }
@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                         'size' => $_FILES['additional_images']['size'][$i]
                     ];
                     
-                    $additionalImage = uploadFile($file, '../uploads/', ['image/jpeg', 'image/png', 'image/gif']);
+                    $additionalImage = uploadFile($file, UPLOADS_DIR, ['image/jpeg', 'image/png', 'image/gif']);
                     if ($additionalImage !== false) {
                         $newImages[] = $additionalImage;
                     }
@@ -266,8 +266,8 @@ if (isset($_GET['delete_image']) && isset($_GET['image_id'])) {
     
     if ($image) {
         // Delete image file
-        if (file_exists('../uploads/' . $image['image_path'])) {
-            unlink('../uploads/' . $image['image_path']);
+        if (file_exists(UPLOADS_DIR . $image['image_path'])) {
+            unlink(UPLOADS_DIR . $image['image_path']);
         }
         
         // Delete from database
@@ -327,7 +327,7 @@ $additionalJS = [
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="name" class="form-label">Product Name *</label>
-                                <input type="text" class="form-control" id="name" name="name" required value="<?php echo htmlspecialchars($product['name']); ?>">
+                                <input type="text" class="form-control" id="name" name="name" required value="<?php echo htmlspecialchars(desanitize($product['name'])); ?>">
                             </div>
                             <div class="col-md-6">
                                 <label for="sku" class="form-label">SKU</label>
@@ -380,7 +380,7 @@ $additionalJS = [
                         <label class="form-label">Main Product Image</label>
                         <div class="text-center mb-3">
                             <?php if ($product['image_main']): ?>
-                                <img src="../uploads/<?php echo $product['image_main']; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="img-thumbnail mb-2" style="max-width: 200px; max-height: 200px;">
+                                <img src="<?php echo UPLOADS_URL . $product['image_main']; ?>" alt="<?php echo htmlspecialchars(desanitize($product['name'])); ?>" class="img-thumbnail mb-2" style="max-width: 200px; max-height: 200px;">
                             <?php else: ?>
                                 <div class="text-center text-muted p-4 border mb-2">
                                     <i class="fas fa-image fa-4x"></i>
@@ -398,7 +398,7 @@ $additionalJS = [
                 
                 <div class="mb-4">
                     <label for="description" class="form-label">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="6"><?php echo htmlspecialchars($product['description'] ?? ''); ?></textarea>
+                    <textarea class="form-control" id="description" name="description" rows="6"><?php echo htmlspecialchars(desanitize($product['description'] ?? '')); ?></textarea>
                 </div>
                 
                 <div class="mb-4">
@@ -424,7 +424,7 @@ $additionalJS = [
                             <?php foreach ($productImages as $image): ?>
                                 <div class="col-md-3 mb-3">
                                     <div class="card">
-                                        <img src="../uploads/<?php echo $image['image_path']; ?>" alt="Product Image" class="card-img-top" style="height: 150px; object-fit: contain;">
+                                        <img src="<?php echo UPLOADS_URL . $image['image_path']; ?>" alt="Product Image" class="card-img-top" style="height: 150px; object-fit: contain;">
                                         <div class="card-body p-2 text-center">
                                             <a href="edit-product.php?id=<?php echo $productId; ?>&delete_image=1&image_id=<?php echo $image['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this image?')">
                                                 <i class="fas fa-trash"></i> Delete

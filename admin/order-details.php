@@ -198,7 +198,7 @@ $additionalJS = [
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <?php if ($item['image_main']): ?>
-                                                    <img src="../uploads/<?php echo $item['image_main']; ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>" class="img-thumbnail me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <img src="<?php echo UPLOADS_URL . $item['image_main']; ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>" class="img-thumbnail me-3" style="width: 50px; height: 50px; object-fit: cover;">
                                                 <?php else: ?>
                                                     <div class="text-center text-muted me-3" style="width: 50px; height: 50px; line-height: 50px; border: 1px solid #ddd;">
                                                         <i class="fas fa-image"></i>

@@ -17,6 +17,17 @@ function sanitize($input) {
 }
 
 /**
+ * Desanitize: Convert HTML entities back to their original characters
+ * Use this when displaying sanitized content in form fields
+ * 
+ * @param string $input - The input to desanitize
+ * @return string - Desanitized input
+ */
+function desanitize($input) {
+    return htmlspecialchars_decode($input, ENT_QUOTES);
+}
+
+/**
  * Redirect to a specific page
  * 
  * @param string $url - The URL to redirect to
@@ -140,11 +151,24 @@ function isLoggedIn() {
 function uploadFile($file, $destinationFolder = UPLOADS_DIR, $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'], $maxSize = 2097152) {
     // Check if file was uploaded without errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
+        $errorMessages = [
+            UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+            UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form',
+            UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload'
+        ];
+        
+        $errorMessage = isset($errorMessages[$file['error']]) ? $errorMessages[$file['error']] : 'Unknown upload error';
+        error_log('Upload error: ' . $errorMessage);
         return false;
     }
     
     // Validate file size
     if ($file['size'] > $maxSize) {
+        error_log('File too large: ' . $file['size'] . ' bytes (max: ' . $maxSize . ' bytes)');
         return false;
     }
     
@@ -153,6 +177,7 @@ function uploadFile($file, $destinationFolder = UPLOADS_DIR, $allowedTypes = ['i
     $fileType = $finfo->file($file['tmp_name']);
     
     if (!in_array($fileType, $allowedTypes)) {
+        error_log('Invalid file type: ' . $fileType . ' (allowed: ' . implode(', ', $allowedTypes) . ')');
         return false;
     }
     
@@ -163,14 +188,31 @@ function uploadFile($file, $destinationFolder = UPLOADS_DIR, $allowedTypes = ['i
     
     // Create the destination folder if it doesn't exist
     if (!file_exists($destinationFolder)) {
-        mkdir($destinationFolder, 0755, true);
+        if (!mkdir($destinationFolder, 0777, true)) {
+            error_log('Failed to create upload directory: ' . $destinationFolder);
+            return false;
+        }
+        chmod($destinationFolder, 0777); // Ensure directory is writable
+    } else if (!is_writable($destinationFolder)) {
+        // If directory exists but isn't writable, try to make it writable
+        chmod($destinationFolder, 0777);
+        if (!is_writable($destinationFolder)) {
+            error_log('Upload directory is not writable: ' . $destinationFolder);
+            return false;
+        }
     }
+    
+    // Log the complete file path for debugging
+    error_log('Attempting to upload file to: ' . $destinationFolder . $filename);
     
     // Move the uploaded file to the destination folder
     if (move_uploaded_file($file['tmp_name'], $destinationFolder . $filename)) {
+        // Make sure the uploaded file is readable by the web server
+        chmod($destinationFolder . $filename, 0644);
         return $filename;
     }
     
+    error_log('Failed to move uploaded file from ' . $file['tmp_name'] . ' to ' . $destinationFolder . $filename);
     return false;
 }
 

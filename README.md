@@ -11,6 +11,7 @@ A PHP-based e-commerce system with admin panel and storefront.
 - User account management (orders, addresses, profile)
 - Admin dashboard for managing products, orders, and categories
 - Order management system
+- Bulk image upload for products
 
 ## Setup Instructions
 
@@ -27,9 +28,10 @@ A PHP-based e-commerce system with admin panel and storefront.
 ## User Authentication
 
 The system includes a complete user authentication system with:
+
 - User registration and login
 - Profile management via the simple_profile.php page
-- Order history tracking 
+- Order history tracking
 - Address management for shipping and billing
 - Integration with checkout process
 
@@ -38,3 +40,44 @@ The system includes a complete user authentication system with:
 - PHP 7.4+
 - MySQL 5.7+
 - XAMPP or similar PHP development environment
+- Writable `uploads` directory (chmod 777 recommended for development)
+
+## Product Image Management
+
+### Bulk Image Upload
+
+The system includes a bulk image upload feature that allows you to:
+
+1. Upload multiple images at once
+2. Apply images to all products, products in a specific category, or specific products by ID
+3. Set uploaded images as the main product image or add them as additional images
+4. Distribute images evenly across selected products
+
+To use the bulk image upload feature:
+
+1. Log in to the admin panel
+2. Navigate to "Products"
+3. Click the "Bulk Image Upload" button
+4. Choose your upload options:
+   - Upload Mode: Apply to all products, products in a specific category, or specific products by ID
+   - Image Options: Set as main image or add as additional image
+5. Select multiple images to upload
+6. Click "Upload Images"
+
+### Recommended Image Sources
+
+For product images, you can use the following sources:
+
+- [Unsplash](https://unsplash.com/collections/8172554/e-commerce-products) - Free high-quality product images
+- [Pexels](https://www.pexels.com/search/product/) - Free stock photos of various products
+- [Pixabay](https://pixabay.com/images/search/product/) - Free images for commercial use
+- [Product Placeholder](https://placehold.co/) - Generate placeholder images with custom dimensions
+
+### Special Characters in Product Names
+
+The system properly handles special characters (like apostrophes, quotes, etc.) in product names and descriptions:
+
+1. Input is sanitized using `htmlspecialchars()` before storing in the database for security
+2. HTML entities are decoded using `htmlspecialchars_decode()` when displaying in forms
+3. The API handles encoding/decoding automatically when sending/receiving data
+4. Products with names like "Men's Running Shoes" will display properly throughout the site

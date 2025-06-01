@@ -29,6 +29,12 @@ if (!isset($_SESSION['admin_user_id'])) {
     
     <!-- Additional CSS -->
     <?php if (isset($additionalCSS)): ?>
+        
+    <!-- Global JavaScript Variables -->
+    <script>
+        // Define global variables for use in JavaScript
+        window.uploadsUrl = "<?php echo UPLOADS_URL; ?>";
+    </script>
         <?php foreach ($additionalCSS as $css): ?>
             <link rel="stylesheet" href="<?php echo $css; ?>">
         <?php endforeach; ?>

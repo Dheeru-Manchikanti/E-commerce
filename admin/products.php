@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         // Process image upload
         $image_main = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $image_main = uploadFile($_FILES['image'], '../uploads/', ['image/jpeg', 'image/png', 'image/gif']);
+            $image_main = uploadFile($_FILES['image'], UPLOADS_DIR, ['image/jpeg', 'image/png', 'image/gif']);
             if ($image_main === false) {
                 $formErrors[] = 'Failed to upload image. Please ensure it is a valid image file (JPG, PNG, or GIF) and less than 2MB.';
             }
@@ -185,9 +185,14 @@ $additionalJS = [
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Products</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="fas fa-plus"></i> Add New Product
-        </button>
+        <div>
+            <a href="bulk-image-upload.php" class="btn btn-success me-2">
+                <i class="fas fa-images"></i> Bulk Image Upload
+            </a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                <i class="fas fa-plus"></i> Add New Product
+            </button>
+        </div>
     </div>
     
     <?php if (!empty($formSuccess)): ?>
@@ -318,7 +323,7 @@ $additionalJS = [
                                         <td><?php echo $product['id']; ?></td>
                                         <td>
                                             <?php if ($product['image_main']): ?>
-                                                <img src="../uploads/<?php echo $product['image_main']; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="img-thumbnail" style="max-width: 50px; max-height: 50px;">
+                                                <img src="<?php echo UPLOADS_URL . $product['image_main']; ?>" alt="<?php echo htmlspecialchars(desanitize($product['name'])); ?>" class="img-thumbnail" style="max-width: 50px; max-height: 50px;">
                                             <?php else: ?>
                                                 <div class="text-center text-muted">
                                                     <i class="fas fa-image fa-2x"></i>
@@ -326,12 +331,12 @@ $additionalJS = [
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?php echo htmlspecialchars($product['name']); ?>
+                                            <?php echo htmlspecialchars(desanitize($product['name'])); ?>
                                             <?php if ($product['featured']): ?>
                                                 <span class="badge bg-warning ms-1">Featured</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td><?php echo htmlspecialchars($product['category_names'] ?? ''); ?></td>
+                                        <td><?php echo htmlspecialchars(desanitize($product['category_names'] ?? '')); ?></td>
                                         <td>
                                             <?php if ($product['sale_price']): ?>
                                                 <span class="text-danger"><?php echo formatPrice($product['sale_price']); ?></span>
@@ -358,13 +363,10 @@ $additionalJS = [
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-sm btn-info">
+                                                <a href="edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-sm btn-info" title="Edit Product">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-success edit-product-inline" data-id="<?php echo $product['id']; ?>">
-                                                    <i class="fas fa-pencil-alt"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-danger delete-product" data-id="<?php echo $product['id']; ?>">
+                                                <button type="button" class="btn btn-sm btn-danger delete-product" data-id="<?php echo $product['id']; ?>" title="Delete Product">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -433,7 +435,7 @@ $additionalJS = [
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="name" class="form-label">Product Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" required value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>">
+                            <input type="text" class="form-control" id="name" name="name" required value="<?php echo isset($name) ? htmlspecialchars(desanitize($name)) : ''; ?>">
                         </div>
                         <div class="col-md-6">
                             <label for="sku" class="form-label">SKU</label>
@@ -474,7 +476,7 @@ $additionalJS = [
                     
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="4"><?php echo isset($description) ? htmlspecialchars($description) : ''; ?></textarea>
+                        <textarea class="form-control" id="description" name="description" rows="4"><?php echo isset($description) ? htmlspecialchars(desanitize($description)) : ''; ?></textarea>
                     </div>
                     
                     <div class="mb-3">
@@ -520,106 +522,6 @@ $additionalJS = [
     </div>
 </div>
 
-<!-- Edit Product Modal -->
-<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editProductForm" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
-                <input type="hidden" id="edit_id" name="id">
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_name" class="form-label">Product Name *</label>
-                            <input type="text" class="form-control" id="edit_name" name="name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_sku" class="form-label">SKU</label>
-                            <input type="text" class="form-control" id="edit_sku" name="sku">
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_price" class="form-label">Regular Price *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="edit_price" name="price" step="0.01" min="0" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_sale_price" class="form-label">Sale Price</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="edit_sale_price" name="sale_price" step="0.01" min="0">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_stock_quantity" class="form-label">Stock Quantity *</label>
-                            <input type="number" class="form-control" id="edit_stock_quantity" name="stock_quantity" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_status" class="form-label">Status</label>
-                            <select class="form-control" id="edit_status" name="status">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="edit_description" class="form-label">Description</label>
-                        <textarea class="form-control" id="edit_description" name="description" rows="4"></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="edit_image" class="form-label">Product Image</label>
-                        <input type="file" class="form-control" id="edit_image" name="image">
-                        <small class="text-muted">Leave empty to keep the current image</small>
-                        <div class="mt-2">
-                            <img id="currentImage" src="#" alt="Current Image" style="max-width: 200px; max-height: 200px; display: none;">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="edit_featured" name="featured">
-                            <label class="form-check-label" for="edit_featured">
-                                Featured Product
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Product Categories</label>
-                        <div class="row">
-                            <?php foreach ($allCategories as $category): ?>
-                                <div class="col-md-4 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="categories[]" value="<?php echo $category['id']; ?>" id="edit_category_<?php echo $category['id']; ?>">
-                                        <label class="form-check-label" for="edit_category_<?php echo $category['id']; ?>">
-                                            <?php echo htmlspecialchars($category['name']); ?>
-                                        </label>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="saveProductChanges" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 <?php include 'includes/footer.php'; ?>
