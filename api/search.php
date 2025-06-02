@@ -22,11 +22,13 @@ $searchTerms = '%' . $query . '%';
 $sql = "SELECT p.*, (SELECT image_path FROM product_images WHERE product_id = p.id LIMIT 1) as additional_image 
         FROM products p 
         WHERE p.status = 'active' AND 
-        (p.name LIKE :search OR p.description LIKE :search OR p.sku LIKE :search) 
+        (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?) 
         ORDER BY p.name ASC 
         LIMIT 10";
 $db->query($sql);
-$db->bind(':search', $searchTerms);
+$db->bind(1, $searchTerms);
+$db->bind(2, $searchTerms);
+$db->bind(3, $searchTerms);
 $products = $db->resultSet();
 
 // Format results

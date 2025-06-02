@@ -19,22 +19,26 @@ $offset = ($page - 1) * $perPage;
 // Count total products matching the search
 $productCountSql = "SELECT COUNT(*) as total FROM products 
                     WHERE status = 'active' AND 
-                    (name LIKE :search OR description LIKE :search OR sku LIKE :search)";
+                    (name LIKE ? OR description LIKE ? OR sku LIKE ?)";
 $db->query($productCountSql);
-$db->bind(':search', $searchTerms);
+$db->bind(1, $searchTerms);
+$db->bind(2, $searchTerms);
+$db->bind(3, $searchTerms);
 $totalCount = $db->single()['total'];
 
 // Get products matching the search with pagination
 $sql = "SELECT p.*, (SELECT image_path FROM product_images WHERE product_id = p.id LIMIT 1) as additional_image 
         FROM products p 
         WHERE p.status = 'active' AND 
-        (p.name LIKE :search OR p.description LIKE :search OR p.sku LIKE :search) 
+        (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?) 
         ORDER BY p.name ASC 
-        LIMIT :offset, :limit";
+        LIMIT ?, ?";
 $db->query($sql);
-$db->bind(':search', $searchTerms);
-$db->bind(':offset', $offset, PDO::PARAM_INT);
-$db->bind(':limit', $perPage, PDO::PARAM_INT);
+$db->bind(1, $searchTerms);
+$db->bind(2, $searchTerms);
+$db->bind(3, $searchTerms);
+$db->bind(4, $offset, PDO::PARAM_INT);
+$db->bind(5, $perPage, PDO::PARAM_INT);
 $products = $db->resultSet();
 
 // Generate pagination data
