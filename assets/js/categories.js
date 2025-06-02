@@ -21,8 +21,16 @@ $(document).ready(function () {
       return false;
     }
 
+    // Store form submission time to prevent duplicate submissions
+    sessionStorage.setItem("categoryFormSubmitted", Date.now());
+
     return true;
   });
+
+  // Prevent form resubmission on page reload
+  if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+  }
 
   // Inline editing of category
   $(".edit-category").on("click", function (e) {
@@ -86,13 +94,17 @@ $(document).ready(function () {
         status: status,
       },
       success: function (response) {
-        const result = JSON.parse(response);
-        if (result.status === "success") {
+        console.log(response);
+
+        if (response.status === "success") {
           $("#editCategoryModal").modal("hide");
           alert("Category updated successfully");
-          window.location.reload();
+
+          // Instead of just reloading (which might resubmit forms),
+          // redirect to the categories page with a clean URL
+          window.location.href = "categories.php";
         } else {
-          alert("Error: " + result.message);
+          alert("Error: " + response.message);
         }
       },
       error: function () {
@@ -109,19 +121,41 @@ $(document).ready(function () {
         "Are you sure you want to delete this category? This cannot be undone."
       )
     ) {
-      const categoryId = $(this).data("id");
+      // Extract category ID from href attribute
+      const href = $(this).attr("href");
+      let categoryId;
+
+      if (href) {
+        // Extract ID from URL format like "categories.php?action=delete&id=21"
+        const match = href.match(/[?&]id=(\d+)/);
+        if (match && match[1]) {
+          categoryId = match[1];
+        }
+      } else {
+        // Fallback to data-id if href is not available
+        categoryId = $(this).data("id");
+      }
+
+      // Check if categoryId is defined
+      if (!categoryId) {
+        alert("Error: Category ID not found");
+        return;
+      }
+
+      console.log("Deleting category ID:", categoryId);
 
       $.ajax({
         url: "../api/categories.php?action=delete",
         type: "POST",
         data: { id: categoryId },
         success: function (response) {
-          const result = JSON.parse(response);
-          if (result.status === "success") {
+          //const result = JSON.parse(response);
+          if (response.status === "success") {
             alert("Category deleted successfully");
-            window.location.reload();
+            // Redirect to the categories page with a clean URL
+            window.location.href = "categories.php";
           } else {
-            alert("Error: " + result.message);
+            alert("Error: " + response.message);
           }
         },
         error: function () {

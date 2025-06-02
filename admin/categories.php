@@ -9,6 +9,11 @@ if (!isset($_SESSION['admin_user_id'])) {
 // Include database and functions
 require_once '../includes/init.php';
 
+// Check for action via GET parameter (for redirect success messages)
+if (isset($_GET['action']) && $_GET['action'] === 'added') {
+    $formSuccess = 'Category added successfully.';
+}
+
 // Get all categories
 $db->query("SELECT c.*, p.name as parent_name 
            FROM categories c 
@@ -66,6 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
                 $parent_id = null;
                 $status = 'active';
                 
+                // Redirect to prevent form resubmission on page refresh
+                header('Location: categories.php?action=added');
+                exit();
+                
+                // Note: The code below will not be reached due to the redirect
                 // Refresh categories list
                 $db->query("SELECT c.*, p.name as parent_name 
                            FROM categories c 
@@ -206,9 +216,9 @@ $additionalJS = [
                                             <button type="button" class="btn btn-sm btn-info edit-category" data-id="<?php echo $category['id']; ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <a href="categories.php?action=delete&id=<?php echo $category['id']; ?>" class="btn btn-sm btn-danger delete-category" onclick="return confirm('Are you sure you want to delete this category?')">
+                                            <button type="button" class="btn btn-sm btn-danger delete-category" data-id="<?php echo $category['id']; ?>">
                                                 <i class="fas fa-trash"></i>
-                                            </a>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

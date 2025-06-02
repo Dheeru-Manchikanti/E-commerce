@@ -233,7 +233,7 @@ $additionalJS = [
                                             <a href="order-details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-info">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-primary view-order" data-id="<?php echo $order['id']; ?>">
+                                            <button type="button" class="btn btn-sm btn-primary view-order" style = "display:none;" data-id="<?php echo $order['id']; ?>">
                                                 <i class="fas fa-edit"></i> Quick View
                                             </button>
                                         </div>
