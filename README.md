@@ -18,10 +18,9 @@ A PHP-based e-commerce system with admin panel and storefront.
 1. Clone or download this repository
 2. Place it in your XAMPP htdocs folder
 3. Import the database.sql file into your MySQL server
-4. Import the sql/user_tables.sql file to add user authentication functionality
-5. Configure database settings in includes/config.php
-6. Access the site at http://localhost/Ecommerce/
-7. Access the admin panel at http://localhost/Ecommerce/admin/
+4. Configure database settings in includes/config.php
+5. Access the site at http://localhost/Ecommerce/
+6. Access the admin panel at http://localhost/Ecommerce/admin/
    - Username: admin
    - Password: admin123
 
@@ -63,21 +62,3 @@ To use the bulk image upload feature:
    - Image Options: Set as main image or add as additional image
 5. Select multiple images to upload
 6. Click "Upload Images"
-
-### Recommended Image Sources
-
-For product images, you can use the following sources:
-
-- [Unsplash](https://unsplash.com/collections/8172554/e-commerce-products) - Free high-quality product images
-- [Pexels](https://www.pexels.com/search/product/) - Free stock photos of various products
-- [Pixabay](https://pixabay.com/images/search/product/) - Free images for commercial use
-- [Product Placeholder](https://placehold.co/) - Generate placeholder images with custom dimensions
-
-### Special Characters in Product Names
-
-The system properly handles special characters (like apostrophes, quotes, etc.) in product names and descriptions:
-
-1. Input is sanitized using `htmlspecialchars()` before storing in the database for security
-2. HTML entities are decoded using `htmlspecialchars_decode()` when displaying in forms
-3. The API handles encoding/decoding automatically when sending/receiving data
-4. Products with names like "Men's Running Shoes" will display properly throughout the site
