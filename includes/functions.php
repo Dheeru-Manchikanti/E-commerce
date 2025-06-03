@@ -70,7 +70,7 @@ function generateOrderNumber() {
  * @return string - Formatted price
  */
 function formatPrice($price) {
-    return '$' . number_format($price, 2);
+    return '₹' . number_format($price, 2);
 }
 
 /**
@@ -128,6 +128,31 @@ function displayFlashMessage() {
         }
         unset($_SESSION['flash_messages']);
     }
+}
+
+/**
+ * Check if a specific flash message exists
+ * 
+ * @param string $name - Name of the message
+ * @return bool - True if message exists
+ */
+function hasFlashMessage($name) {
+    return isset($_SESSION['flash_messages'][$name]);
+}
+
+/**
+ * Get and remove a specific flash message
+ * 
+ * @param string $name - Name of the message
+ * @return string|null - Message text or null if not found
+ */
+function getFlashMessage($name) {
+    if (isset($_SESSION['flash_messages'][$name])) {
+        $message = $_SESSION['flash_messages'][$name]['message'];
+        unset($_SESSION['flash_messages'][$name]);
+        return $message;
+    }
+    return null;
 }
 
 /**

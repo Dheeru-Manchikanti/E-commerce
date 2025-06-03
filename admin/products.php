@@ -53,7 +53,6 @@ foreach ($parentCategories as $parent) {
 
 // Process add product form
 $formErrors = [];
-$formSuccess = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
@@ -65,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         $price = filter_var($_POST['price'], FILTER_VALIDATE_FLOAT);
         $sale_price = !empty($_POST['sale_price']) ? filter_var($_POST['sale_price'], FILTER_VALIDATE_FLOAT) : null;
         $stock_quantity = filter_var($_POST['stock_quantity'], FILTER_VALIDATE_INT);
-        $sku = sanitize($_POST['sku']);
+        $sku = !empty($_POST['sku']) ? sanitize($_POST['sku']) : null;
         $featured = isset($_POST['featured']) ? 1 : 0;
         $status = sanitize($_POST['status']);
         $categories = isset($_POST['categories']) ? $_POST['categories'] : [];
@@ -123,9 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
                 $db->bind(':featured', $featured);
                 $db->bind(':status', $status);
                 $db->bind(':image_main', $image_main);
-                $db->execute();
+                
+                if (!$db->execute()) {
+                    throw new Exception("Failed to create product");
+                }
                 
                 $productId = $db->lastInsertId();
+                
+                // Make sure we have a valid product ID
+                if (!$productId) {
+                    throw new Exception("Failed to get product ID");
+                }
                 
                 // Add product categories
                 if (!empty($categories)) {
@@ -147,19 +154,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
                         $db->bind($param, $value);
                     }
                     
-                    $db->execute();
+                    if (!$db->execute()) {
+                        throw new Exception("Failed to add product categories");
+                    }
                 }
                 
                 $db->commit();
                 
-                $formSuccess = 'Product added successfully.';
+                // Set success flash message instead of page variable
+                setFlashMessage('success', 'Product added successfully.', 'success');
                 
-                // Clear form data
-                $name = $description = $sku = '';
-                $price = $sale_price = $stock_quantity = '';
-                $featured = 0;
-                $status = 'active';
-                $categories = [];
+                // Redirect to products page with clean URL (POST-REDIRECT-GET pattern)
+                header('Location: products.php');
+                exit();
             } catch (Exception $e) {
                 $db->rollBack();
                 $formErrors[] = 'Error adding product: ' . $e->getMessage();
@@ -170,6 +177,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 
 // Generate pagination
 $pagination = paginate($totalProducts, $itemsPerPage, $page, '?page=(:num)');
+
+// Check for deletion success parameter and convert it to flash message
+if (isset($_GET['deletion']) && $_GET['deletion'] === 'success') {
+    setFlashMessage('success', 'Product deleted successfully.', 'success');
+    // Redirect to clean URL
+    header('Location: products.php');
+    exit();
+}
+
+// Check for bulk action success parameter and convert it to flash message
+if (isset($_GET['bulk']) && $_GET['bulk'] === 'success') {
+    $action = isset($_GET['action']) ? htmlspecialchars($_GET['action']) : 'processed';
+    $actionText = '';
+    switch ($action) {
+        case 'activate':
+            $actionText = 'activated';
+            break;
+        case 'deactivate':
+            $actionText = 'deactivated';
+            break;
+        case 'delete':
+            $actionText = 'deleted';
+            break;
+        default:
+            $actionText = 'processed';
+    }
+    setFlashMessage('success', 'Selected products have been ' . $actionText . ' successfully.', 'success');
+    // Redirect to clean URL
+    header('Location: products.php');
+    exit();
+}
 
 // Page title
 $pageTitle = 'Products';
@@ -195,8 +233,12 @@ $additionalJS = [
         </div>
     </div>
     
-    <?php if (!empty($formSuccess)): ?>
-        <div class="alert alert-success"><?php echo $formSuccess; ?></div>
+    <?php if (hasFlashMessage('success')): ?>
+        <div class="alert alert-success"><?php echo getFlashMessage('success'); ?></div>
+    <?php endif; ?>
+    
+    <?php if (hasFlashMessage('error')): ?>
+        <div class="alert alert-danger"><?php echo getFlashMessage('error'); ?></div>
     <?php endif; ?>
     
     <!-- Products Filter -->
@@ -447,14 +489,14 @@ $additionalJS = [
                         <div class="col-md-6">
                             <label for="price" class="form-label">Regular Price *</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">₹</span>
                                 <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required value="<?php echo isset($price) ? htmlspecialchars($price) : ''; ?>">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label for="sale_price" class="form-label">Sale Price</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">₹</span>
                                 <input type="number" class="form-control" id="sale_price" name="sale_price" step="0.01" min="0" value="<?php echo isset($sale_price) ? htmlspecialchars($sale_price) : ''; ?>">
                             </div>
                         </div>
@@ -523,5 +565,14 @@ $additionalJS = [
 </div>
 
 
+<script>
+// Show modal if there are form errors
+<?php if (!empty($formErrors)): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var addProductModal = new bootstrap.Modal(document.getElementById('addProductModal'));
+    addProductModal.show();
+});
+<?php endif; ?>
+</script>
 
 <?php include 'includes/footer.php'; ?>

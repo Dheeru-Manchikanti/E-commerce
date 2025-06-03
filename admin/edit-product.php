@@ -69,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
     // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $formErrors[] = 'Invalid form submission.';
+    } else if (!isset($_POST['product_id']) || (int)$_POST['product_id'] !== $productId) {
+        $formErrors[] = 'Invalid product ID.';
     } else {
         // Get and sanitize form data
         $name = sanitize($_POST['name']);
@@ -76,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         $price = filter_var($_POST['price'], FILTER_VALIDATE_FLOAT);
         $sale_price = !empty($_POST['sale_price']) ? filter_var($_POST['sale_price'], FILTER_VALIDATE_FLOAT) : null;
         $stock_quantity = filter_var($_POST['stock_quantity'], FILTER_VALIDATE_INT);
-        $sku = sanitize($_POST['sku']);
+        $sku = !empty($_POST['sku']) ? sanitize($_POST['sku']) : null;
         $featured = isset($_POST['featured']) ? 1 : 0;
         $status = sanitize($_POST['status']);
         $categories = isset($_POST['categories']) ? $_POST['categories'] : [];
@@ -175,13 +177,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                 $db->bind(':status', $status);
                 $db->bind(':image_main', $image_main);
                 $db->bind(':id', $productId);
-                $db->execute();
+                
+                if (!$db->execute()) {
+                    throw new Exception("Failed to update product");
+                }
                 
                 // Update categories
                 // First, delete existing categories
                 $db->query("DELETE FROM product_categories WHERE product_id = :product_id");
                 $db->bind(':product_id', $productId);
-                $db->execute();
+                
+                if (!$db->execute()) {
+                    throw new Exception("Failed to delete existing product categories");
+                }
                 
                 // Then add new categories
                 if (!empty($categories)) {
@@ -203,7 +211,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                         $db->bind($param, $value);
                     }
                     
-                    $db->execute();
+                    if (!$db->execute()) {
+                        throw new Exception("Failed to add product categories");
+                    }
                 }
                 
                 // Add new additional images
@@ -249,6 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
             } catch (Exception $e) {
                 $db->rollBack();
                 $formErrors[] = 'Error updating product: ' . $e->getMessage();
+                // Add detailed error information for debugging
+                error_log('Product Update Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             }
         }
     }
@@ -320,6 +332,7 @@ $additionalJS = [
         </div>
         <div class="card-body">
             <form method="post" action="edit-product.php?id=<?php echo $productId; ?>" enctype="multipart/form-data">
+                <input type="hidden" name="product_id" value="<?php echo $productId; ?>">
                 <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                 
                 <div class="row mb-4">
@@ -339,14 +352,14 @@ $additionalJS = [
                             <div class="col-md-6">
                                 <label for="price" class="form-label">Regular Price *</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">₹</span>
                                     <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required value="<?php echo $product['price']; ?>">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="sale_price" class="form-label">Sale Price</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">₹</span>
                                     <input type="number" class="form-control" id="sale_price" name="sale_price" step="0.01" min="0" value="<?php echo $product['sale_price'] ?? ''; ?>">
                                 </div>
                             </div>

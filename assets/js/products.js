@@ -81,22 +81,36 @@ $(document).ready(function () {
       )
     ) {
       const productId = $(this).data("id");
+      const $row = $(this).closest("tr");
 
       $.ajax({
         url: "../api/products.php?action=delete",
         type: "POST",
         data: { id: productId },
         success: function (response) {
-          const result = JSON.parse(response);
-          if (result.status === "success") {
-            alert("Product deleted successfully");
-            window.location.reload();
-          } else {
-            alert("Error: " + result.message);
+          try {
+            const result =
+              typeof response === "string" ? JSON.parse(response) : response;
+            if (result.status === "success") {
+              // Remove the row from the table immediately for instant feedback
+              $row.fadeOut(300, function () {
+                $(this).remove();
+                // Then redirect to show success message
+                window.location.href = "products.php?deletion=success";
+              });
+            } else {
+              alert("Error: " + result.message);
+            }
+          } catch (e) {
+            console.error("Error parsing response:", e, response);
+            alert("Error processing server response");
           }
         },
-        error: function () {
-          alert("Error deleting product");
+        error: function (xhr) {
+          console.error("AJAX Error:", xhr.responseText);
+          alert(
+            "Error deleting product. Check the browser console for details."
+          );
         },
       });
     }
@@ -131,6 +145,8 @@ $(document).ready(function () {
           " selected products?"
       )
     ) {
+      const $selectedRows = $(".product-checkbox:checked").closest("tr");
+
       $.ajax({
         url: "../api/products.php?action=bulk",
         type: "POST",
@@ -139,10 +155,39 @@ $(document).ready(function () {
           ids: selectedIds,
         },
         success: function (response) {
-          const result = JSON.parse(response);
+          const result =
+            typeof response === "string" ? JSON.parse(response) : response;
           if (result.status === "success") {
-            alert("Bulk action completed successfully");
-            window.location.reload();
+            // Apply immediate visual feedback based on action
+            if (action === "delete") {
+              // Fade out deleted rows
+              $selectedRows.fadeOut(300, function () {
+                // Redirect after animation completes
+                window.location.href =
+                  "products.php?bulk=success&action=" + action;
+              });
+            } else {
+              // For activate/deactivate, update status visually then redirect
+              $selectedRows.each(function () {
+                const $statusBadge = $(this).find(".badge");
+                if (action === "activate") {
+                  $statusBadge
+                    .removeClass("bg-danger")
+                    .addClass("bg-success")
+                    .text("Active");
+                } else if (action === "deactivate") {
+                  $statusBadge
+                    .removeClass("bg-success")
+                    .addClass("bg-danger")
+                    .text("Inactive");
+                }
+              });
+              // Short delay to show the status change, then redirect
+              setTimeout(function () {
+                window.location.href =
+                  "products.php?bulk=success&action=" + action;
+              }, 500);
+            }
           } else {
             alert("Error: " + result.message);
           }

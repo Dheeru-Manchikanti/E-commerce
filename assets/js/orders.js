@@ -31,7 +31,7 @@ $(document).ready(function () {
           $("#viewOrderModal").find("#order_status").text(order.status);
           $("#viewOrderModal")
             .find("#order_total")
-            .text("$" + parseFloat(order.total_amount).toFixed(2));
+            .text("₹" + parseFloat(order.total_amount).toFixed(2));
 
           // Customer details
           $("#viewOrderModal")

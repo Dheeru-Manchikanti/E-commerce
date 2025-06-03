@@ -109,12 +109,12 @@ $(document).ready(function () {
           // Update cart count and totals
           $("#cartCount").text(response.cartCount);
           $("#itemTotal_" + itemId).text(
-            "$" + parseFloat(response.itemTotal).toFixed(2)
+            "₹" + parseFloat(response.itemTotal).toFixed(2)
           );
           $("#cartSubtotal").text(
-            "$" + parseFloat(response.subtotal).toFixed(2)
+            "₹" + parseFloat(response.subtotal).toFixed(2)
           );
-          $("#cartTotal").text("$" + parseFloat(response.total).toFixed(2));
+          $("#cartTotal").text("₹" + parseFloat(response.total).toFixed(2));
 
           // Show success message
           const alert = `
@@ -163,9 +163,9 @@ $(document).ready(function () {
 
               // Update totals
               $("#cartSubtotal").text(
-                "$" + parseFloat(response.subtotal).toFixed(2)
+                "₹" + parseFloat(response.subtotal).toFixed(2)
               );
-              $("#cartTotal").text("$" + parseFloat(response.total).toFixed(2));
+              $("#cartTotal").text("₹" + parseFloat(response.total).toFixed(2));
 
               // If cart is empty, show message
               if (response.cartCount === 0) {
@@ -339,6 +339,6 @@ $(document).ready(function () {
 
   // Helper function to format price
   function formatPrice(price) {
-    return "$" + parseFloat(price).toFixed(2);
+    return "₹" + parseFloat(price).toFixed(2);
   }
 });

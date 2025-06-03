@@ -37,6 +37,9 @@ switch ($action) {
     case 'delete':
         deleteProduct();
         break;
+    case 'bulk':
+        bulkAction();
+        break;
     default:
         sendResponse('error', 'Invalid action', 400);
 }
@@ -358,8 +361,8 @@ function updateProduct() {
 function deleteProduct() {
     global $db;
     
-    // Check if ID is provided
-    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    // Check if ID is provided - check both GET and POST
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
     if ($id <= 0) {
         sendResponse('error', 'Product ID is required', 400);
     }
@@ -374,6 +377,15 @@ function deleteProduct() {
             sendResponse('error', 'Product not found', 404);
         }
         
+        // Check if the product is referenced in any orders
+        $db->query("SELECT COUNT(*) as count FROM order_items WHERE product_id = :id");
+        $db->bind(':id', $id);
+        $orderCount = $db->single();
+        
+        if ($orderCount && $orderCount['count'] > 0) {
+            sendResponse('error', 'Cannot delete product because it is associated with existing orders. Consider deactivating it instead.', 400);
+        }
+        
         // Get additional images
         $db->query("SELECT image_path FROM product_images WHERE product_id = :product_id");
         $db->bind(':product_id', $id);
@@ -381,6 +393,16 @@ function deleteProduct() {
         
         // Start transaction
         $db->beginTransaction();
+        
+        // Delete product_categories first (foreign key constraint)
+        $db->query("DELETE FROM product_categories WHERE product_id = :id");
+        $db->bind(':id', $id);
+        $db->execute();
+        
+        // Delete product_images
+        $db->query("DELETE FROM product_images WHERE product_id = :id");
+        $db->bind(':id', $id);
+        $db->execute();
         
         // Delete product
         $db->query("DELETE FROM products WHERE id = :id");
@@ -400,12 +422,100 @@ function deleteProduct() {
             }
         }
         
+        // Return clean success response
         sendResponse('success', 'Product deleted successfully', 200);
     } catch (Exception $e) {
         if ($db->inTransaction()) {
             $db->rollBack();
         }
+        // Log detailed error information
+        error_log('Product Delete Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
         sendResponse('error', 'Error deleting product: ' . $e->getMessage(), 500);
+    }
+}
+
+/**
+ * Handle bulk actions on products
+ */
+function bulkAction() {
+    global $db;
+    
+    // Only allow POST requests
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        sendResponse('error', 'Only POST requests allowed', 405);
+    }
+    
+    // Get bulk action and IDs
+    $action = isset($_POST['action']) ? $_POST['action'] : '';
+    $ids = isset($_POST['ids']) ? $_POST['ids'] : [];
+    
+    // Validate action
+    if (empty($action)) {
+        sendResponse('error', 'Action is required', 400);
+    }
+    
+    // Validate IDs
+    if (empty($ids) || !is_array($ids)) {
+        sendResponse('error', 'Product IDs are required', 400);
+    }
+    
+    // Sanitize IDs
+    $ids = array_map('intval', $ids);
+    $ids = array_filter($ids, function($id) { return $id > 0; });
+    
+    if (empty($ids)) {
+        sendResponse('error', 'Valid product IDs are required', 400);
+    }
+    
+    try {
+        $db->beginTransaction();
+        
+        switch ($action) {
+            case 'activate':
+                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                $db->query("UPDATE products SET status = 'active' WHERE id IN ($placeholders)");
+                foreach ($ids as $index => $id) {
+                    $db->bind($index + 1, $id);
+                }
+                $db->execute();
+                break;
+                
+            case 'deactivate':
+                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                $db->query("UPDATE products SET status = 'inactive' WHERE id IN ($placeholders)");
+                foreach ($ids as $index => $id) {
+                    $db->bind($index + 1, $id);
+                }
+                $db->execute();
+                break;
+                
+            case 'delete':
+                // Delete product categories first
+                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                $db->query("DELETE FROM product_categories WHERE product_id IN ($placeholders)");
+                foreach ($ids as $index => $id) {
+                    $db->bind($index + 1, $id);
+                }
+                $db->execute();
+                
+                // Delete products
+                $db->query("DELETE FROM products WHERE id IN ($placeholders)");
+                foreach ($ids as $index => $id) {
+                    $db->bind($index + 1, $id);
+                }
+                $db->execute();
+                break;
+                
+            default:
+                throw new Exception('Invalid bulk action');
+        }
+        
+        $db->commit();
+        sendResponse('success', 'Bulk action completed successfully');
+        
+    } catch (Exception $e) {
+        $db->rollBack();
+        sendResponse('error', 'Error performing bulk action: ' . $e->getMessage(), 500);
     }
 }
 
@@ -429,6 +539,7 @@ function sendResponse($status, $message, $code = 200, $data = null) {
         $response['data'] = $data;
     }
     
+    // Ensure we're sending valid JSON
     echo json_encode($response);
     exit;
 }
