@@ -333,7 +333,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (Exception $e) {
             // Rollback transaction on error
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             $errors['general'] = 'Order processing failed: ' . $e->getMessage();
         }
     }

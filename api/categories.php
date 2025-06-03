@@ -235,6 +235,9 @@ switch ($action) {
             $db->bind(':id', $categoryId);
             
             if ($db->execute()) {
+                // Reset auto-increment to reuse deleted IDs
+                resetAutoIncrementForReuse('categories');
+                
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Category deleted successfully'
@@ -294,6 +297,9 @@ switch ($action) {
         }
         
         try {
+            // Reset auto-increment to reuse deleted IDs
+            resetAutoIncrementForReuse('categories');
+            
             // Insert the category
             $sql = "INSERT INTO categories (name, description, parent_id, status, created_at, updated_at) 
                    VALUES (:name, :description, " . ($parent_id ? ":parent_id" : "NULL") . ", :status, NOW(), NOW())";

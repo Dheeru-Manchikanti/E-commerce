@@ -134,6 +134,13 @@ class Database {
     }
     
     /**
+     * Check if a transaction is active
+     */
+    public function inTransaction() {
+        return $this->conn->inTransaction();
+    }
+    
+    /**
      * End a transaction and commit
      */
     public function commit() {

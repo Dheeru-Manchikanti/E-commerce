@@ -161,6 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
                 
                 $db->commit();
                 
+                // Reset auto-increment to reuse deleted IDs (after successful commit)
+                resetAutoIncrementForReuse('products');
+                
                 // Set success flash message instead of page variable
                 setFlashMessage('success', 'Product added successfully.', 'success');
                 
@@ -168,7 +171,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
                 header('Location: products.php');
                 exit();
             } catch (Exception $e) {
-                $db->rollBack();
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
                 $formErrors[] = 'Error adding product: ' . $e->getMessage();
             }
         }
@@ -224,6 +229,9 @@ $additionalJS = [
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Products</h1>
         <div>
+            <a href="reset-auto-increment.php" class="btn btn-outline-info me-2" title="Reset Auto-Increment IDs">
+                <i class="fas fa-sync-alt"></i> Reset IDs
+            </a>
             <a href="bulk-image-upload.php" class="btn btn-success me-2">
                 <i class="fas fa-images"></i> Bulk Image Upload
             </a>

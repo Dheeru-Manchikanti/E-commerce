@@ -2,12 +2,26 @@
  * Categories management JavaScript file
  */
 $(document).ready(function () {
+  console.log("Categories.js loaded");
+
   // DataTable initialization for categories list
   if ($("#categoriesTable").length) {
-    $("#categoriesTable").DataTable({
+    console.log("Initializing DataTable");
+    var table = $("#categoriesTable").DataTable({
       order: [[0, "asc"]],
       pageLength: 10,
     });
+
+    // Debug: Log when page changes
+    table.on("page.dt", function () {
+      console.log(
+        "DataTable page changed - event delegation should still work"
+      );
+    });
+
+    // Debug: Log initial button count
+    console.log("Initial edit buttons found:", $(".edit-category").length);
+    console.log("Initial delete buttons found:", $(".delete-category").length);
   }
 
   // Category form validation
@@ -32,10 +46,58 @@ $(document).ready(function () {
     window.history.replaceState(null, null, window.location.href);
   }
 
-  // Inline editing of category
-  $(".edit-category").on("click", function (e) {
+  // Show add category modal if there are form errors
+  if ($(".alert-danger").length > 0) {
+    $("#addCategoryModal").modal("show");
+  }
+
+  // Debug: Test global click handler to make sure event delegation works
+  $(document).on("click", "button", function (e) {
+    if ($(this).hasClass("edit-category")) {
+      console.log("Global click handler detected edit-category button click");
+    }
+    if ($(this).hasClass("delete-category")) {
+      console.log("Global click handler detected delete-category button click");
+    }
+  });
+
+  // Debug: Test if buttons exist after DataTable initialization
+  setTimeout(function () {
+    console.log(
+      "After timeout - edit buttons found:",
+      $(".edit-category").length
+    );
+    console.log(
+      "After timeout - delete buttons found:",
+      $(".delete-category").length
+    );
+
+    // Test clicking the first edit button programmatically
+    if ($(".edit-category").length > 0) {
+      console.log(
+        "First edit button data-id:",
+        $(".edit-category").first().data("id")
+      );
+    }
+  }, 1000);
+
+  // Edit category event handler with event delegation
+  $(document).on("click", ".edit-category", function (e) {
     e.preventDefault();
+    console.log("Edit category event triggered!");
+
     const categoryId = $(this).data("id");
+    const buttonElement = $(this);
+
+    console.log("Edit button clicked! Category ID:", categoryId);
+    console.log("Button element:", buttonElement);
+    console.log("Button data attributes:", buttonElement.data());
+
+    if (!categoryId) {
+      console.error("No category ID found on button:", buttonElement);
+      alert("Error: Category ID not found");
+      return;
+    }
 
     // AJAX call to get category details
     $.ajax({
@@ -43,28 +105,32 @@ $(document).ready(function () {
       type: "GET",
       dataType: "json",
       success: function (response) {
-        if (response.status === "success") {
+        console.log("Get category response:", response);
+        if (response && response.status === "success" && response.data) {
           const category = response.data;
 
           // Fill the modal with category data
-          $("#editCategoryModal").find("#edit_id").val(category.id);
-          $("#editCategoryModal").find("#edit_name").val(category.name);
-          $("#editCategoryModal")
-            .find("#edit_description")
-            .val(category.description);
-          $("#editCategoryModal")
-            .find("#edit_parent_id")
-            .val(category.parent_id);
-          $("#editCategoryModal").find("#edit_status").val(category.status);
+          $("#edit_id").val(category.id);
+          $("#edit_name").val(category.name || "");
+          $("#edit_description").val(category.description || "");
+          $("#edit_parent_id").val(category.parent_id || "");
+          $("#edit_status").val(category.status || "active");
 
           // Show the modal
           $("#editCategoryModal").modal("show");
         } else {
-          alert("Error: " + response.message);
+          alert("Error: " + (response.message || "Invalid response"));
         }
       },
-      error: function () {
-        alert("Error fetching category details");
+      error: function (xhr, status, error) {
+        console.error("AJAX Error:", {
+          status: status,
+          error: error,
+          responseText: xhr.responseText,
+          readyState: xhr.readyState,
+          statusText: xhr.statusText,
+        });
+        alert("Error fetching category details: " + error);
       },
     });
   });
@@ -83,9 +149,13 @@ $(document).ready(function () {
       return;
     }
 
+    // Show loading state
+    $(this).prop("disabled", true).text("Saving...");
+
     $.ajax({
       url: "../api/categories.php?action=update",
       type: "POST",
+      dataType: "json",
       data: {
         id: id,
         name: name,
@@ -94,72 +164,87 @@ $(document).ready(function () {
         status: status,
       },
       success: function (response) {
-        console.log(response);
+        console.log("Update response:", response);
 
-        if (response.status === "success") {
+        if (response && response.status === "success") {
           $("#editCategoryModal").modal("hide");
-          alert("Category updated successfully");
 
-          // Instead of just reloading (which might resubmit forms),
-          // redirect to the categories page with a clean URL
-          window.location.href = "categories.php";
+          // Redirect to categories page with success parameter
+          window.location.href = "categories.php?update=success";
         } else {
-          alert("Error: " + response.message);
+          alert("Error: " + (response.message || "Update failed"));
+          $("#saveCategoryChanges")
+            .prop("disabled", false)
+            .text("Save Changes");
         }
       },
-      error: function () {
-        alert("Error updating category");
+      error: function (xhr, status, error) {
+        console.error("AJAX Error:", {
+          status: status,
+          error: error,
+          responseText: xhr.responseText,
+        });
+        alert("Error updating category: " + error);
+        $("#saveCategoryChanges").prop("disabled", false).text("Save Changes");
       },
     });
   });
 
-  // Delete category
-  $(".delete-category").on("click", function (e) {
+  // Delete category event handler with event delegation
+  $(document).on("click", ".delete-category", function (e) {
     e.preventDefault();
+    console.log("Delete category event triggered!");
+
+    const categoryId = $(this).data("id");
+    const buttonElement = $(this);
+
+    console.log("Delete button clicked! Category ID:", categoryId);
+    console.log("Button element:", buttonElement);
+    console.log("Button data attributes:", buttonElement.data());
+
+    if (!categoryId) {
+      console.error("No category ID found on button:", buttonElement);
+      alert("Error: Category ID not found");
+      return;
+    }
+
     if (
       confirm(
         "Are you sure you want to delete this category? This cannot be undone."
       )
     ) {
-      // Extract category ID from href attribute
-      const href = $(this).attr("href");
-      let categoryId;
+      const $row = $(this).closest("tr");
 
-      if (href) {
-        // Extract ID from URL format like "categories.php?action=delete&id=21"
-        const match = href.match(/[?&]id=(\d+)/);
-        if (match && match[1]) {
-          categoryId = match[1];
-        }
-      } else {
-        // Fallback to data-id if href is not available
-        categoryId = $(this).data("id");
-      }
+      console.log("Proceeding with deletion for category ID:", categoryId);
 
-      // Check if categoryId is defined
-      if (!categoryId) {
-        alert("Error: Category ID not found");
-        return;
-      }
-
-      console.log("Deleting category ID:", categoryId);
+      // Show immediate visual feedback
+      $row.fadeOut(300);
 
       $.ajax({
         url: "../api/categories.php?action=delete",
         type: "POST",
+        dataType: "json",
         data: { id: categoryId },
         success: function (response) {
-          //const result = JSON.parse(response);
-          if (response.status === "success") {
-            alert("Category deleted successfully");
-            // Redirect to the categories page with a clean URL
-            window.location.href = "categories.php";
+          console.log("Delete response:", response);
+          if (response && response.status === "success") {
+            // Redirect to categories page with success parameter
+            window.location.href = "categories.php?deletion=success";
           } else {
-            alert("Error: " + response.message);
+            // Restore row visibility on error
+            $row.fadeIn(300);
+            alert("Error: " + (response.message || "Delete failed"));
           }
         },
-        error: function () {
-          alert("Error deleting category");
+        error: function (xhr, status, error) {
+          console.error("AJAX Error:", {
+            status: status,
+            error: error,
+            responseText: xhr.responseText,
+          });
+          // Restore row visibility on error
+          $row.fadeIn(300);
+          alert("Error deleting category: " + error);
         },
       });
     }

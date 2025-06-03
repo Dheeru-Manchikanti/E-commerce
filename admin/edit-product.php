@@ -257,7 +257,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                 $db->bind(':product_id', $productId);
                 $productImages = $db->resultSet();
             } catch (Exception $e) {
-                $db->rollBack();
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
                 $formErrors[] = 'Error updating product: ' . $e->getMessage();
                 // Add detailed error information for debugging
                 error_log('Product Update Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());

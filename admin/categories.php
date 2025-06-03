@@ -9,9 +9,17 @@ if (!isset($_SESSION['admin_user_id'])) {
 // Include database and functions
 require_once '../includes/init.php';
 
-// Check for action via GET parameter (for redirect success messages)
-if (isset($_GET['action']) && $_GET['action'] === 'added') {
-    $formSuccess = 'Category added successfully.';
+// Handle success parameters from redirects and convert to flash messages
+if (isset($_GET['update']) && $_GET['update'] === 'success') {
+    setFlashMessage('success', 'Category updated successfully.');
+    header('Location: categories.php');
+    exit();
+}
+
+if (isset($_GET['deletion']) && $_GET['deletion'] === 'success') {
+    setFlashMessage('success', 'Category deleted successfully.');
+    header('Location: categories.php');
+    exit();
 }
 
 // Get all categories
@@ -27,7 +35,6 @@ $parentCategories = $db->resultSet();
 
 // Process add category form
 $formErrors = [];
-$formSuccess = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
@@ -56,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
         // If no errors, add category to database
         if (empty($formErrors)) {
             try {
+                // Reset auto-increment to reuse deleted IDs
+                resetAutoIncrementForReuse('categories');
+                
                 $db->query("INSERT INTO categories (name, description, parent_id, status) 
                            VALUES (:name, :description, :parent_id, :status)");
                 $db->bind(':name', $name);
@@ -64,30 +74,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
                 $db->bind(':status', $status);
                 $db->execute();
                 
-                $formSuccess = 'Category added successfully.';
-                
-                // Clear form data
-                $name = $description = '';
-                $parent_id = null;
-                $status = 'active';
+                setFlashMessage('success', 'Category added successfully.');
                 
                 // Redirect to prevent form resubmission on page refresh
-                header('Location: categories.php?action=added');
+                header('Location: categories.php');
                 exit();
                 
                 // Note: The code below will not be reached due to the redirect
-                // Refresh categories list
-                $db->query("SELECT c.*, p.name as parent_name 
-                           FROM categories c 
-                           LEFT JOIN categories p ON c.parent_id = p.id 
-                           ORDER BY COALESCE(c.parent_id, c.id), c.name");
-                $categories = $db->resultSet();
-                
-                // Refresh parent categories dropdown
-                $db->query("SELECT id, name FROM categories WHERE parent_id IS NULL ORDER BY name");
-                $parentCategories = $db->resultSet();
             } catch (Exception $e) {
-                $formErrors[] = 'Error adding category: ' . $e->getMessage();
+                setFlashMessage('error', 'Error adding category: ' . $e->getMessage());
             }
         }
     }
@@ -157,8 +152,18 @@ $additionalJS = [
         </button>
     </div>
     
-    <?php if (!empty($formSuccess)): ?>
-        <div class="alert alert-success"><?php echo $formSuccess; ?></div>
+    <?php if (hasFlashMessage('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo getFlashMessage('success'); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (hasFlashMessage('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?php echo getFlashMessage('error'); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     <?php endif; ?>
     
     <!-- Categories Table -->

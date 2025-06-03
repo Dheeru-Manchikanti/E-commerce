@@ -411,6 +411,9 @@ function deleteProduct() {
         
         $db->commit();
         
+        // Reset auto-increment to reuse deleted IDs
+        resetAutoIncrementForReuse('products');
+        
         // Delete image files (outside of transaction)
         if ($product['image_main'] && file_exists(UPLOADS_DIR . $product['image_main'])) {
             unlink(UPLOADS_DIR . $product['image_main']);
@@ -504,6 +507,9 @@ function bulkAction() {
                     $db->bind($index + 1, $id);
                 }
                 $db->execute();
+                
+                // Reset auto-increment after bulk deletion
+                resetAutoIncrementForReuse('products');
                 break;
                 
             default:
@@ -514,7 +520,9 @@ function bulkAction() {
         sendResponse('success', 'Bulk action completed successfully');
         
     } catch (Exception $e) {
-        $db->rollBack();
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
         sendResponse('error', 'Error performing bulk action: ' . $e->getMessage(), 500);
     }
 }

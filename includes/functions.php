@@ -303,3 +303,79 @@ function paginate($totalItems, $itemsPerPage = 10, $currentPage = 1, $urlPattern
     
     return $pagination;
 }
+
+/**
+ * Get the next available ID for a table (reuses deleted IDs)
+ * 
+ * @param string $table - Table name (products or categories)
+ * @return int - Next available ID
+ */
+function getNextAvailableId($table) {
+    global $db;
+    
+    // Validate table name for security
+    $allowedTables = ['products', 'categories'];
+    if (!in_array($table, $allowedTables)) {
+        return false;
+    }
+    
+    try {
+        // Get all existing IDs in order
+        $db->query("SELECT id FROM {$table} ORDER BY id");
+        $existingIds = $db->resultSet();
+        
+        if (empty($existingIds)) {
+            return 1;
+        }
+        
+        // Find the first gap in the sequence
+        $nextId = 1;
+        foreach ($existingIds as $row) {
+            if ($row['id'] == $nextId) {
+                $nextId++;
+            } else {
+                // Found a gap, return this ID
+                return $nextId;
+            }
+        }
+        
+        // No gaps found, return next sequential ID
+        return $nextId;
+        
+    } catch (Exception $e) {
+        error_log('Error getting next available ID: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Reset auto-increment to reuse deleted IDs for a table
+ * 
+ * @param string $table - Table name (products or categories)
+ * @return bool - True if successful
+ */
+function resetAutoIncrementForReuse($table) {
+    global $db;
+    
+    // Validate table name for security
+    $allowedTables = ['products', 'categories'];
+    if (!in_array($table, $allowedTables)) {
+        return false;
+    }
+    
+    try {
+        $nextId = getNextAvailableId($table);
+        if ($nextId === false) {
+            return false;
+        }
+        
+        // Reset auto-increment to the next available ID (cannot use parameter binding with ALTER TABLE)
+        $sql = "ALTER TABLE {$table} AUTO_INCREMENT = " . intval($nextId);
+        $db->query($sql);
+        return $db->execute();
+        
+    } catch (Exception $e) {
+        error_log('Error resetting auto-increment: ' . $e->getMessage());
+        return false;
+    }
+}

@@ -181,7 +181,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $db->commit();
                         $formSuccess = "Images uploaded successfully! Updated {$processedCount} product records.";
                     } catch (Exception $e) {
-                        $db->rollBack();
+                        if ($db->inTransaction()) {
+                            $db->rollBack();
+                        }
                         $formErrors[] = 'Error processing bulk upload: ' . $e->getMessage();
                     }
                 }
