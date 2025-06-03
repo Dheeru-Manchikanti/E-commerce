@@ -64,11 +64,11 @@ if (!empty($productCategories)) {
 $pageTitle = $product['name'];
 $currentPage = 'product';
 
-// Include header
+
 include 'includes/public_header.php';
 ?>
 
-<!-- Breadcrumb -->
+
 <nav aria-label="breadcrumb" class="mt-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.php">Home</a></li>
@@ -235,8 +235,6 @@ include 'includes/public_header.php';
 <script>
     function changeMainImage(imgSrc) {
         document.getElementById('mainProductImage').src = imgSrc;
-        
-        // Update active thumbnail
         document.querySelectorAll('.thumbnail').forEach(function(thumb) {
             thumb.classList.remove('active');
             if (thumb.src === imgSrc) {

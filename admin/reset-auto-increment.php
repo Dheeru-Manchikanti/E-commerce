@@ -1,32 +1,24 @@
 <?php
-/**
- * Auto-increment ID reuse utility
- * This script helps reuse deleted IDs by resetting auto-increment values
- */
 
+// This is yet to be implemented
 require_once '../includes/init.php';
 
-/**
- * Reset auto-increment to reuse deleted IDs for a given table
- * @param string $table - Table name (products or categories)
- * @return array - Result with status and message
- */
 function resetAutoIncrement($table) {
     global $db;
     
     try {
-        // Validate table name for security
+
         $allowedTables = ['products', 'categories'];
         if (!in_array($table, $allowedTables)) {
             return ['status' => 'error', 'message' => 'Invalid table name'];
         }
         
-        // Get all existing IDs
+
         $db->query("SELECT id FROM {$table} ORDER BY id");
         $existingIds = $db->resultSet();
         
         if (empty($existingIds)) {
-            // No records, reset to 1
+
             $nextId = 1;
         } else {
             // Find the first gap in the sequence
@@ -57,21 +49,17 @@ function resetAutoIncrement($table) {
     }
 }
 
-/**
- * Get auto-increment status for a table
- * @param string $table - Table name
- * @return array - Current auto-increment info
- */
+
 function getAutoIncrementStatus($table) {
     global $db;
     
     try {
-        // Get current auto-increment value
+
         $db->query("SHOW TABLE STATUS LIKE :table");
         $db->bind(':table', $table);
         $status = $db->single();
         
-        // Get existing IDs
+
         $db->query("SELECT id FROM {$table} ORDER BY id");
         $existingIds = $db->resultSet();
         
@@ -185,7 +173,7 @@ if (isset($_GET['action'])) {
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         // Load initial status
         $(document).ready(function() {
             getStatus('products');
@@ -229,6 +217,6 @@ if (isset($_GET['action'])) {
                 });
             }
         }
-    </script>
+    </script> -->
 </body>
 </html>

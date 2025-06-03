@@ -1,10 +1,6 @@
-/**
- * Categories management JavaScript file
- */
 $(document).ready(function () {
   console.log("Categories.js loaded");
 
-  // DataTable initialization for categories list
   if ($("#categoriesTable").length) {
     console.log("Initializing DataTable");
     var table = $("#categoriesTable").DataTable({
@@ -12,14 +8,12 @@ $(document).ready(function () {
       pageLength: 10,
     });
 
-    // Debug: Log when page changes
     table.on("page.dt", function () {
       console.log(
         "DataTable page changed - event delegation should still work"
       );
     });
 
-    // Debug: Log initial button count
     console.log("Initial edit buttons found:", $(".edit-category").length);
     console.log("Initial delete buttons found:", $(".delete-category").length);
   }
@@ -41,17 +35,14 @@ $(document).ready(function () {
     return true;
   });
 
-  // Prevent form resubmission on page reload
   if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);
   }
 
-  // Show add category modal if there are form errors
   if ($(".alert-danger").length > 0) {
     $("#addCategoryModal").modal("show");
   }
 
-  // Debug: Test global click handler to make sure event delegation works
   $(document).on("click", "button", function (e) {
     if ($(this).hasClass("edit-category")) {
       console.log("Global click handler detected edit-category button click");
@@ -61,7 +52,6 @@ $(document).ready(function () {
     }
   });
 
-  // Debug: Test if buttons exist after DataTable initialization
   setTimeout(function () {
     console.log(
       "After timeout - edit buttons found:",
@@ -242,7 +232,6 @@ $(document).ready(function () {
             error: error,
             responseText: xhr.responseText,
           });
-          // Restore row visibility on error
           $row.fadeIn(300);
           alert("Error deleting category: " + error);
         },

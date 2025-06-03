@@ -1,26 +1,20 @@
 <?php
-/**
- * Products API
- * 
- * This file handles API requests for products
- */
-
-// Include necessary files
+//product API
 require_once '../includes/init.php';
 
-// Set headers
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Handle pre-flight OPTIONS request
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// Get action
+
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 // Handle different actions
@@ -44,20 +38,18 @@ switch ($action) {
         sendResponse('error', 'Invalid action', 400);
 }
 
-/**
- * Get a single product by ID
- */
+
 function getProduct() {
     global $db;
     
-    // Check if ID is provided
+
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     if ($id <= 0) {
         sendResponse('error', 'Product ID is required', 400);
     }
     
     try {
-        // Get product data
+
         $db->query("SELECT * FROM products WHERE id = :id");
         $db->bind(':id', $id);
         $product = $db->single();
@@ -66,7 +58,7 @@ function getProduct() {
             sendResponse('error', 'Product not found', 404);
         }
         
-        // Decode HTML entities in name and description - this prevents display issues
+
         $product['name'] = desanitize($product['name']);
         $product['description'] = desanitize($product['description']);
         
@@ -90,9 +82,7 @@ function getProduct() {
     }
 }
 
-/**
- * List products with filtering and pagination
- */
+
 function listProducts() {
     global $db;
     
@@ -107,7 +97,7 @@ function listProducts() {
     $status = isset($_GET['status']) ? trim($_GET['status']) : '';
     
     try {
-        // Base query
+
         $sql = "SELECT p.*, 
                 (SELECT GROUP_CONCAT(c.name SEPARATOR ', ') 
                 FROM categories c 
@@ -118,7 +108,6 @@ function listProducts() {
         $binds = [];
         $whereClauses = [];
         
-        // Add filters if provided
         if (!empty($name)) {
             $whereClauses[] = "p.name LIKE :name";
             $binds[':name'] = "%$name%";
@@ -135,7 +124,7 @@ function listProducts() {
             $binds[':status'] = $status;
         }
         
-        // Add where clause if necessary
+
         if (!empty($whereClauses)) {
             $sql .= " WHERE " . implode(" AND ", $whereClauses);
         }
@@ -144,11 +133,7 @@ function listProducts() {
         $sql .= " ORDER BY p.id DESC LIMIT :offset, :limit";
         $binds[':offset'] = $offset;
         $binds[':limit'] = $limit;
-        
-        // Execute query
         $db->query($sql);
-        
-        // Bind parameters
         foreach ($binds as $param => $value) {
             $db->bind($param, $value);
         }
@@ -205,9 +190,7 @@ function listProducts() {
     }
 }
 
-/**
- * Update product
- */
+
 function updateProduct() {
     global $db;
     
@@ -355,9 +338,7 @@ function updateProduct() {
     }
 }
 
-/**
- * Delete product
- */
+
 function deleteProduct() {
     global $db;
     
@@ -437,9 +418,7 @@ function deleteProduct() {
     }
 }
 
-/**
- * Handle bulk actions on products
- */
+
 function bulkAction() {
     global $db;
     
@@ -527,14 +506,6 @@ function bulkAction() {
     }
 }
 
-/**
- * Send JSON response
- * 
- * @param string $status - Response status (success or error)
- * @param string $message - Response message
- * @param int $code - HTTP status code
- * @param mixed $data - Response data
- */
 function sendResponse($status, $message, $code = 200, $data = null) {
     http_response_code($code);
     

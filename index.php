@@ -14,7 +14,7 @@ $sql = "SELECT p.*, (SELECT image_path FROM product_images WHERE product_id = p.
 $db->query($sql);
 $featuredProducts = $db->resultSet();
 
-// Get latest products
+
 $sql = "SELECT p.*, (SELECT image_path FROM product_images WHERE product_id = p.id LIMIT 1) as additional_image 
         FROM products p 
         WHERE p.status = 'active' 
@@ -23,16 +23,16 @@ $sql = "SELECT p.*, (SELECT image_path FROM product_images WHERE product_id = p.
 $db->query($sql);
 $latestProducts = $db->resultSet();
 
-// Get all parent categories for display
+
 $sql = "SELECT * FROM categories WHERE parent_id IS NULL AND status = 'active'";
 $db->query($sql);
 $parentCategories = $db->resultSet();
 
-// Include header
+
 include 'includes/public_header.php';
 ?>
 
-<!-- Hero Section -->
+
 <section class="hero-section mb-5">
     <div class="container">
         <div class="row">
@@ -170,7 +170,7 @@ include 'includes/public_header.php';
     </div>
 </section>
 
-<!-- Promotional Banner -->
+
 <section class="mb-5">
     <div class="container">
         <div class="card bg-primary text-white">

@@ -1,14 +1,5 @@
 <?php
-/**
- * Helper functions for the application
- */
 
-/**
- * Sanitize user input
- * 
- * @param string $input - The input to sanitize
- * @return string - Sanitized input
- */
 function sanitize($input) {
     $input = trim($input);
     $input = stripslashes($input);
@@ -16,33 +7,18 @@ function sanitize($input) {
     return $input;
 }
 
-/**
- * Desanitize: Convert HTML entities back to their original characters
- * Use this when displaying sanitized content in form fields
- * 
- * @param string $input - The input to desanitize
- * @return string - Desanitized input
- */
+
 function desanitize($input) {
     return htmlspecialchars_decode($input, ENT_QUOTES);
 }
 
-/**
- * Redirect to a specific page
- * 
- * @param string $url - The URL to redirect to
- */
+
 function redirect($url) {
     header('Location: ' . $url);
     exit();
 }
 
-/**
- * Generate a random string
- * 
- * @param int $length - Length of the string to generate
- * @return string - Random alphanumeric string
- */
+
 function generateRandomString($length = 10) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $randomString = '';
@@ -52,32 +28,19 @@ function generateRandomString($length = 10) {
     return $randomString;
 }
 
-/**
- * Generate a unique order number
- * 
- * @return string - Order number in format ORD-YYYYMMDD-XXXXX
- */
+
 function generateOrderNumber() {
     $date = date('Ymd');
     $random = strtoupper(generateRandomString(5));
     return "ORD-{$date}-{$random}";
 }
 
-/**
- * Format price with currency symbol
- * 
- * @param float $price - Price to format
- * @return string - Formatted price
- */
+
 function formatPrice($price) {
     return '₹' . number_format($price, 2);
 }
 
-/**
- * Generate CSRF token and store in session
- * 
- * @return string - CSRF token
- */
+
 function generateCSRFToken() {
     if (!isset($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -85,12 +48,7 @@ function generateCSRFToken() {
     return $_SESSION['csrf_token'];
 }
 
-/**
- * Verify CSRF token
- * 
- * @param string $token - Token to verify
- * @return bool - True if token is valid
- */
+
 function verifyCSRFToken($token) {
     if (!isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
         return false;
@@ -98,13 +56,7 @@ function verifyCSRFToken($token) {
     return true;
 }
 
-/**
- * Display flash message
- * 
- * @param string $name - Name of the message
- * @param string $message - The message text
- * @param string $class - Bootstrap alert class
- */
+
 function setFlashMessage($name, $message, $class = 'success') {
     if (!isset($_SESSION['flash_messages'])) {
         $_SESSION['flash_messages'] = array();
@@ -115,9 +67,7 @@ function setFlashMessage($name, $message, $class = 'success') {
     );
 }
 
-/**
- * Display flash message and remove it from session
- */
+
 function displayFlashMessage() {
     if (isset($_SESSION['flash_messages']) && !empty($_SESSION['flash_messages'])) {
         foreach ($_SESSION['flash_messages'] as $name => $details) {
@@ -130,22 +80,12 @@ function displayFlashMessage() {
     }
 }
 
-/**
- * Check if a specific flash message exists
- * 
- * @param string $name - Name of the message
- * @return bool - True if message exists
- */
+
 function hasFlashMessage($name) {
     return isset($_SESSION['flash_messages'][$name]);
 }
 
-/**
- * Get and remove a specific flash message
- * 
- * @param string $name - Name of the message
- * @return string|null - Message text or null if not found
- */
+
 function getFlashMessage($name) {
     if (isset($_SESSION['flash_messages'][$name])) {
         $message = $_SESSION['flash_messages'][$name]['message'];
@@ -155,24 +95,12 @@ function getFlashMessage($name) {
     return null;
 }
 
-/**
- * Check if user is logged in
- * 
- * @return bool - True if user is logged in
- */
+
 function isLoggedIn() {
     return isset($_SESSION['admin_user_id']);
 }
 
-/**
- * Upload file with validation
- * 
- * @param array $file - The $_FILES array element
- * @param string $destinationFolder - Folder to upload to
- * @param array $allowedTypes - Allowed MIME types
- * @param int $maxSize - Maximum file size in bytes
- * @return string|bool - Filename if successful, false if failed
- */
+
 function uploadFile($file, $destinationFolder = UPLOADS_DIR, $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'], $maxSize = 2097152) {
     // Check if file was uploaded without errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -230,9 +158,8 @@ function uploadFile($file, $destinationFolder = UPLOADS_DIR, $allowedTypes = ['i
     // Log the complete file path for debugging
     error_log('Attempting to upload file to: ' . $destinationFolder . $filename);
     
-    // Move the uploaded file to the destination folder
+
     if (move_uploaded_file($file['tmp_name'], $destinationFolder . $filename)) {
-        // Make sure the uploaded file is readable by the web server
         chmod($destinationFolder . $filename, 0644);
         return $filename;
     }
@@ -241,15 +168,6 @@ function uploadFile($file, $destinationFolder = UPLOADS_DIR, $allowedTypes = ['i
     return false;
 }
 
-/**
- * Pagination helper
- * 
- * @param int $totalItems - Total number of items
- * @param int $itemsPerPage - Items per page
- * @param int $currentPage - Current page
- * @param string $urlPattern - URL pattern for pagination links
- * @return array - Pagination data
- */
 function paginate($totalItems, $itemsPerPage = 10, $currentPage = 1, $urlPattern = '?page=(:num)') {
     // Calculate total pages
     $totalPages = ceil($totalItems / $itemsPerPage);
@@ -304,12 +222,6 @@ function paginate($totalItems, $itemsPerPage = 10, $currentPage = 1, $urlPattern
     return $pagination;
 }
 
-/**
- * Get the next available ID for a table (reuses deleted IDs)
- * 
- * @param string $table - Table name (products or categories)
- * @return int - Next available ID
- */
 function getNextAvailableId($table) {
     global $db;
     
@@ -348,12 +260,7 @@ function getNextAvailableId($table) {
     }
 }
 
-/**
- * Reset auto-increment to reuse deleted IDs for a table
- * 
- * @param string $table - Table name (products or categories)
- * @return bool - True if successful
- */
+
 function resetAutoIncrementForReuse($table) {
     global $db;
     

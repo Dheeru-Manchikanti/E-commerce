@@ -1,11 +1,6 @@
-/**
- * Cart and checkout JavaScript file
- */
 $(document).ready(function () {
-  // Get CSRF token from meta tag
   const csrfToken = $('meta[name="csrf-token"]').attr("content");
 
-  // Add to cart functionality
   $(document).on("click", ".add-to-cart", function (e) {
     e.preventDefault();
     const productId = $(this).data("id");
@@ -25,10 +20,8 @@ $(document).ready(function () {
       dataType: "json",
       success: function (response) {
         if (response.status === "success") {
-          // Update cart count in header
           $("#cartCount").text(response.cartCount);
 
-          // Show success message
           const alert = `
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             ${response.message}
@@ -49,7 +42,6 @@ $(document).ready(function () {
             500
           );
 
-          // Auto-dismiss after 5 seconds
           setTimeout(function () {
             $(".alert").alert("close");
           }, 5000);

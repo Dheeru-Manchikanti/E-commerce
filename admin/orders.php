@@ -1,26 +1,26 @@
 <?php
-// Check if user is logged in
+
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
+
 require_once '../includes/init.php';
 
-// Get orders with pagination
+
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $itemsPerPage = 10;
 $offset = ($page - 1) * $itemsPerPage;
 
-// Set up filters
+
 $filterStatus = isset($_GET['status']) ? sanitize($_GET['status']) : '';
 $filterDateFrom = isset($_GET['date_from']) ? sanitize($_GET['date_from']) : '';
 $filterDateTo = isset($_GET['date_to']) ? sanitize($_GET['date_to']) : '';
 $filterOrderId = isset($_GET['order_id']) ? sanitize($_GET['order_id']) : '';
 
-// Build query conditions based on filters
+
 $conditions = [];
 $params = [];
 
@@ -45,7 +45,7 @@ if (!empty($filterOrderId)) {
     $params[':order_number'] = '%' . $filterOrderId . '%';
 }
 
-// Construct the WHERE clause
+
 $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
 // Count total orders with filters
@@ -79,10 +79,10 @@ $pagination = paginate($totalOrders, $itemsPerPage, $page, '?page=(:num)' .
                       ($filterDateTo ? '&date_to=' . urlencode($filterDateTo) : '') . 
                       ($filterOrderId ? '&order_id=' . urlencode($filterOrderId) : ''));
 
-// Page title
+
 $pageTitle = 'Orders';
 
-// Additional JS
+
 $additionalJS = [
     '../assets/js/orders.js'
 ];

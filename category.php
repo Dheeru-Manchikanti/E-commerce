@@ -2,7 +2,7 @@
 // Category page - display products by category
 require_once 'includes/init.php';
 
-// Check if category ID is provided
+
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header('Location: index.php');
     exit;
@@ -66,15 +66,15 @@ $products = $db->resultSet();
 // Generate pagination data
 $pagination = paginate($totalCount, $perPage, $page, "category.php?id=$categoryId&page=(:num)");
 
-// Set page title
+
 $pageTitle = $category['name'];
 $currentPage = 'categories';
 
-// Include header
+
 include 'includes/public_header.php';
 ?>
 
-<!-- Breadcrumb -->
+
 <nav aria-label="breadcrumb" class="mt-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.php">Home</a></li>
@@ -89,7 +89,7 @@ include 'includes/public_header.php';
     </ol>
 </nav>
 
-<!-- Category Header -->
+
 <section class="mb-4">
     <div class="container">
         <div class="card bg-light">
@@ -103,7 +103,7 @@ include 'includes/public_header.php';
     </div>
 </section>
 
-<!-- Subcategories (if any) -->
+
 <?php if (!empty($subcategories)): ?>
 <section class="mb-4">
     <div class="container">

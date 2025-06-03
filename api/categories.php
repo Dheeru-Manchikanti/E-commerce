@@ -1,9 +1,4 @@
 <?php
-/**
- * Categories API
- * 
- * This file handles API requests for categories management
- */
 
 // Include necessary files
 require_once '../includes/init.php';
@@ -24,7 +19,6 @@ function sendErrorResponse($message, $code = 400) {
     exit;
 }
 
-// Handle pre-flight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -33,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Get action
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
-// Handle different actions
+
 switch ($action) {
     case 'get':
         // Get single category details
@@ -129,7 +123,7 @@ switch ($action) {
             exit;
         }
         
-        // Prevent circular references - a category cannot be its own parent
+
         if ($parent_id == $id) {
             echo json_encode([
                 'status' => 'error',
@@ -138,7 +132,7 @@ switch ($action) {
             exit;
         }
         
-        // Check if parent category exists if specified
+
         if ($parent_id !== null) {
             $db->query("SELECT id FROM categories WHERE id = :id");
             $db->bind(':id', $parent_id);

@@ -1,15 +1,12 @@
 <?php
-// Check if user is logged in
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
 require_once '../includes/init.php';
 
-// Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     setFlashMessage('error', 'Order ID is required.', 'danger');
     header('Location: orders.php');
@@ -18,7 +15,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $orderId = (int)$_GET['id'];
 
-// Get order data
+
 $db->query("SELECT o.*, c.first_name, c.last_name, c.email, c.phone, c.address, c.city, c.state, c.postal_code, c.country
            FROM orders o 
            JOIN customers c ON o.customer_id = c.id
@@ -32,7 +29,7 @@ if (!$order) {
     exit();
 }
 
-// Get order items
+
 $db->query("SELECT oi.*, p.name as product_name, p.sku, p.image_main
            FROM order_items oi
            JOIN products p ON oi.product_id = p.id
@@ -40,9 +37,8 @@ $db->query("SELECT oi.*, p.name as product_name, p.sku, p.image_main
 $db->bind(':order_id', $orderId);
 $orderItems = $db->resultSet();
 
-// Process update status form
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-    // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         setFlashMessage('error', 'Invalid form submission.', 'danger');
     } else {
@@ -58,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             if ($result) {
                 setFlashMessage('success', 'Order status updated successfully.', 'success');
                 
-                // Refresh order data
+
                 $db->query("SELECT o.*, c.first_name, c.last_name, c.email, c.phone, c.address, c.city, c.state, c.postal_code, c.country
                            FROM orders o 
                            JOIN customers c ON o.customer_id = c.id
@@ -74,10 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 }
 
-// Page title
+
 $pageTitle = 'Order Details';
 
-// Additional JS
+
 $additionalJS = [
     '../assets/js/orders.js'
 ];

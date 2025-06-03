@@ -7,7 +7,7 @@ if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Handle cart actions
+
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $action = $_GET['action'];
     $productId = (int)$_GET['id'];
@@ -48,7 +48,7 @@ if (!empty($_SESSION['cart'])) {
     $sql = "SELECT * FROM products WHERE id IN ($placeholders) AND status = 'active'";
     $db->query($sql);
     
-    // Bind product IDs
+
     $paramIndex = 1;
     foreach ($productIds as $id) {
         $db->bind($paramIndex, $id);
@@ -57,7 +57,7 @@ if (!empty($_SESSION['cart'])) {
     
     $results = $db->resultSet();
     
-    // Organize products and calculate totals
+
     foreach ($results as $product) {
         $productId = $product['id'];
         
@@ -86,7 +86,7 @@ if (!empty($_SESSION['cart'])) {
     }
 }
 
-// Calculate shipping (simplistic approach, would be more complex in a real system)
+// Calculate shipping
 $shipping = 0;
 if ($subtotal > 0 && $subtotal < 50) {
     $shipping = 5.99;
@@ -103,7 +103,7 @@ $currentPage = 'cart';
 include 'includes/public_header.php';
 ?>
 
-<!-- Breadcrumb -->
+
 <nav aria-label="breadcrumb" class="mt-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.php">Home</a></li>

@@ -1,6 +1,3 @@
-/**
- * Orders management JavaScript file
- */
 $(document).ready(function () {
   // DataTable initialization for orders list
   if ($("#ordersTable").length) {
@@ -114,22 +111,18 @@ $(document).ready(function () {
     });
   });
 
-  // Export orders to CSV
   $("#exportOrders").on("click", function (e) {
     e.preventDefault();
 
-    // Get filter values
     const startDate = $("#startDate").val();
     const endDate = $("#endDate").val();
     const status = $("#filterStatus").val();
 
-    // Build query string
     let queryString = "?action=export";
     if (startDate) queryString += "&start_date=" + startDate;
     if (endDate) queryString += "&end_date=" + endDate;
     if (status) queryString += "&status=" + status;
 
-    // Redirect to export endpoint
     window.location.href = "../api/orders.php" + queryString;
   });
 });

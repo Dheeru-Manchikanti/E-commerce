@@ -34,7 +34,7 @@ $currentPage = 'products';
 include 'includes/public_header.php';
 ?>
 
-<!-- Breadcrumb -->
+
 <nav aria-label="breadcrumb" class="mt-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.php">Home</a></li>

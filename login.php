@@ -1,8 +1,7 @@
 <?php
-// Start session
 session_start();
 
-// Include database and functions
+
 require_once 'includes/init.php';
 
 // Redirect if already logged in
@@ -11,21 +10,19 @@ if (isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Initialize variables
+
 $email = '';
 $password = '';
 $error = '';
 $redirect = '';
 
-// Check if there's a redirect URL
+
 if (isset($_GET['redirect'])) {
     $redirect = sanitize($_GET['redirect']);
 }
 
 // Process login form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $error = 'Invalid form submission. Please try again.';
     } else {
@@ -47,10 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user && password_verify($password, $user['password'])) {
                 // Check if email is verified
                 if ($user['email_verified']) {
-                    // Debug output to error log
                     error_log("User login: " . print_r($user, true));
-                    
-                    // Set session variables
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_name'] = isset($user['first_name']) && isset($user['last_name']) 
                         ? $user['first_name'] . ' ' . $user['last_name'] 
@@ -62,9 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->bind(':id', $user['id']);
                     $db->execute();
                     
-                    // If there's a shopping cart in the session, associate it with the user
                     if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
-                        // In a full implementation, you would save the cart to the database here
                     }
                     
                     // Redirect user
@@ -90,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Set page title
+
 $pageTitle = 'Login';
 
 // Include header

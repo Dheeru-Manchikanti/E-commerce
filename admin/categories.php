@@ -1,15 +1,13 @@
 <?php
-// Check if user is logged in
+
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
 require_once '../includes/init.php';
 
-// Handle success parameters from redirects and convert to flash messages
 if (isset($_GET['update']) && $_GET['update'] === 'success') {
     setFlashMessage('success', 'Category updated successfully.');
     header('Location: categories.php');
@@ -22,36 +20,36 @@ if (isset($_GET['deletion']) && $_GET['deletion'] === 'success') {
     exit();
 }
 
-// Get all categories
+
 $db->query("SELECT c.*, p.name as parent_name 
            FROM categories c 
            LEFT JOIN categories p ON c.parent_id = p.id 
            ORDER BY COALESCE(c.parent_id, c.id), c.name");
 $categories = $db->resultSet();
 
-// Get parent categories for dropdown
+
 $db->query("SELECT id, name FROM categories WHERE parent_id IS NULL ORDER BY name");
 $parentCategories = $db->resultSet();
 
-// Process add category form
+
 $formErrors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
-    // Validate CSRF token
+
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $formErrors[] = 'Invalid form submission.';
     } else {
-        // Get and sanitize form data
+
         $name = sanitize($_POST['name']);
         $description = sanitize($_POST['description']);
         $parent_id = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
         $status = sanitize($_POST['status']);
         
-        // Validation
+
         if (empty($name)) {
             $formErrors[] = 'Category name is required.';
         }
         
-        // Check if parent category exists
+
         if ($parent_id !== null) {
             $db->query("SELECT id FROM categories WHERE id = :id");
             $db->bind(':id', $parent_id);
@@ -60,10 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
             }
         }
         
-        // If no errors, add category to database
+
         if (empty($formErrors)) {
             try {
-                // Reset auto-increment to reuse deleted IDs
+
                 resetAutoIncrementForReuse('categories');
                 
                 $db->query("INSERT INTO categories (name, description, parent_id, status) 
@@ -76,11 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
                 
                 setFlashMessage('success', 'Category added successfully.');
                 
-                // Redirect to prevent form resubmission on page refresh
+
                 header('Location: categories.php');
                 exit();
                 
-                // Note: The code below will not be reached due to the redirect
+
             } catch (Exception $e) {
                 setFlashMessage('error', 'Error adding category: ' . $e->getMessage());
             }
@@ -88,16 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     }
 }
 
-// Process delete category
+
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $categoryId = (int)$_GET['id'];
     
-    // Check if category has products
     $db->query("SELECT COUNT(*) as product_count FROM product_categories WHERE category_id = :category_id");
     $db->bind(':category_id', $categoryId);
     $productCount = $db->single()['product_count'];
     
-    // Check if category has child categories
+
     $db->query("SELECT COUNT(*) as child_count FROM categories WHERE parent_id = :parent_id");
     $db->bind(':parent_id', $categoryId);
     $childCount = $db->single()['child_count'];
@@ -114,14 +111,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             
             setFlashMessage('success', 'Category deleted successfully.', 'success');
             
-            // Refresh categories list
+
             $db->query("SELECT c.*, p.name as parent_name 
                        FROM categories c 
                        LEFT JOIN categories p ON c.parent_id = p.id 
                        ORDER BY COALESCE(c.parent_id, c.id), c.name");
             $categories = $db->resultSet();
             
-            // Refresh parent categories dropdown
+
             $db->query("SELECT id, name FROM categories WHERE parent_id IS NULL ORDER BY name");
             $parentCategories = $db->resultSet();
         } catch (Exception $e) {
@@ -133,10 +130,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     exit();
 }
 
-// Page title
+
 $pageTitle = 'Categories';
 
-// Additional JS
 $additionalJS = [
     '../assets/js/categories.js'
 ];
@@ -240,7 +236,7 @@ $additionalJS = [
     </div>
 </div>
 
-<!-- Add Category Modal -->
+
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

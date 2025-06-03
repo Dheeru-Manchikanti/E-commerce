@@ -2,7 +2,6 @@
 // Order confirmation page
 require_once 'includes/init.php';
 
-// Check if order ID is available in session
 if (!isset($_SESSION['last_order_id']) || !isset($_SESSION['last_order_number'])) {
     header('Location: index.php');
     exit;
@@ -43,10 +42,10 @@ foreach ($orderItems as $item) {
     $subtotal += $item['price'] * $item['quantity'];
 }
 
-// Shipping cost (simplified approach)
+// Shipping cost
 $shipping = 0;
-if ($subtotal < 50) {
-    $shipping = 5.99;
+if ($subtotal < 500) {
+    $shipping = 150;
 }
 
 // Set page title
@@ -55,13 +54,12 @@ $pageTitle = 'Order Confirmation';
 // Include header
 include 'includes/public_header.php';
 
-// Clear session order data after displaying the page
-// This prevents refreshing the page from showing the same order again
+
 unset($_SESSION['last_order_id']);
 unset($_SESSION['last_order_number']);
 ?>
 
-<!-- Breadcrumb -->
+
 <nav aria-label="breadcrumb" class="mt-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.php">Home</a></li>

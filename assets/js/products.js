@@ -1,6 +1,3 @@
-/**
- * Products management JavaScript file
- */
 $(document).ready(function () {
   // DataTable initialization for products list
   if ($("#productsTable").length) {
@@ -70,8 +67,6 @@ $(document).ready(function () {
     return true;
   });
 
-  // Inline editing code removed - now using only the direct edit page
-
   // Delete product
   $(".delete-product").on("click", function (e) {
     e.preventDefault();
@@ -92,10 +87,8 @@ $(document).ready(function () {
             const result =
               typeof response === "string" ? JSON.parse(response) : response;
             if (result.status === "success") {
-              // Remove the row from the table immediately for instant feedback
               $row.fadeOut(300, function () {
                 $(this).remove();
-                // Then redirect to show success message
                 window.location.href = "products.php?deletion=success";
               });
             } else {

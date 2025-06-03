@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/init.php';
 
-// Get cart count if session exists
+
 $cartCount = 0;
 if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     foreach ($_SESSION['cart'] as $item) {
@@ -31,19 +31,11 @@ if ($isLoggedIn) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>E-commerce Store</title>
     
-    <!-- CSRF Token -->
+
     <meta name="csrf-token" content="<?php echo generateCSRFToken(); ?>">
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
-    
-    <!-- Additional CSS -->
     <?php if (isset($additionalCSS)): ?>
         <?php foreach ($additionalCSS as $css): ?>
             <link rel="stylesheet" href="<?php echo $css; ?>">
@@ -51,7 +43,6 @@ if ($isLoggedIn) {
     <?php endif; ?>
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light navbar-store">
         <div class="container">
             <a class="navbar-brand" href="index.php">

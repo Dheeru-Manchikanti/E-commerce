@@ -11,13 +11,12 @@ A PHP-based e-commerce system with admin panel and storefront.
 - User account management (orders, addresses, profile)
 - Admin dashboard for managing products, orders, and categories
 - Order management system
-- Bulk image upload for products
 
 ## Setup Instructions
 
 1. Clone or download this repository
 2. Place it in your XAMPP htdocs folder
-3. Import the database.sql file into your MySQL server
+3. Import the database.sql/ecommerce.sql file into your MySQL server
 4. Configure database settings in includes/config.php
 5. Access the site at http://localhost/Ecommerce/
 6. Access the admin panel at http://localhost/Ecommerce/admin/
@@ -29,7 +28,7 @@ A PHP-based e-commerce system with admin panel and storefront.
 The system includes a complete user authentication system with:
 
 - User registration and login
-- Profile management via the simple_profile.php page
+- Profile management via the profile.php page
 - Order history tracking
 - Address management for shipping and billing
 - Integration with checkout process
@@ -43,7 +42,7 @@ The system includes a complete user authentication system with:
 
 ## Product Image Management
 
-### Bulk Image Upload
+### Bulk Image Upload (Yet to be Implemented)
 
 The system includes a bulk image upload feature that allows you to:
 
@@ -52,7 +51,7 @@ The system includes a bulk image upload feature that allows you to:
 3. Set uploaded images as the main product image or add them as additional images
 4. Distribute images evenly across selected products
 
-To use the bulk image upload feature:
+To use the bulk image upload feature:(currently unavailable)
 
 1. Log in to the admin panel
 2. Navigate to "Products"

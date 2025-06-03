@@ -1,25 +1,25 @@
 <?php
-// Start session
+
 session_start();
 
-// If already logged in, redirect to dashboard
+
 if (isset($_SESSION['admin_user_id'])) {
     header('Location: index.php');
     exit();
 }
 
-// Include database and functions
+
 require_once '../includes/init.php';
 
-// Initialize variables
+
 $username = '';
 $password = '';
 $error = '';
 
-// Process login form
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // Validate CSRF token
+
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $error = 'Invalid form submission. Please try again.';
     } else {
@@ -40,20 +40,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user) {
                 $error = "Found user with ID: " . $user['id'] . " - Verifying password...";
                 if (password_verify($password, $user['password'])) {
-                    // Set session variables
+
                     $_SESSION['admin_user_id'] = $user['id'];
                     $_SESSION['admin_username'] = $user['username'];
                     
-                    // Update last login time
+
                     $db->query("UPDATE admin_users SET last_login = NOW() WHERE id = :id");
                     $db->bind(':id', $user['id']);
                     $db->execute();
                     
-                    // Test session
+
                     session_write_close();
                     session_start();
                     if (isset($_SESSION['admin_user_id'])) {
-                        // Redirect to dashboard
+
                         header('Location: index.php');
                         exit();
                     } else {

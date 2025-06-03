@@ -1,6 +1,3 @@
-/**
- * Main application JavaScript file
- */
 $(document).ready(function () {
   // Admin: Toggle sidebar
   $("#sidebarToggle").on("click", function (e) {

@@ -1,26 +1,26 @@
 <?php
-// Check if user is logged in
+
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
+
 require_once '../includes/init.php';
 
-// Get dashboard statistics
-// Products count
+
+
 $db->query("SELECT COUNT(*) as total_products FROM products");
 $productsResult = $db->single();
 $totalProducts = $productsResult['total_products'];
 
-// Active products count
+
 $db->query("SELECT COUNT(*) as active_products FROM products WHERE status = 'active'");
 $activeProductsResult = $db->single();
 $activeProducts = $activeProductsResult['active_products'];
 
-// Categories count
+
 $db->query("SELECT COUNT(*) as total_categories FROM categories");
 $categoriesResult = $db->single();
 $totalCategories = $categoriesResult['total_categories'];
@@ -127,9 +127,8 @@ $pageTitle = 'Dashboard';
         </div>
     </div>
 
-    <!-- Content Row -->
+
     <div class="row">
-        <!-- Recent Orders -->
         <div class="col-lg-8">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">

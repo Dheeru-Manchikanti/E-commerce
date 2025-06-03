@@ -1,5 +1,4 @@
 <?php
-// Start session
 session_start();
 
 // Include database and functions
@@ -75,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (empty($errors)) {
-            // Hash password
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             
             // Generate verification token

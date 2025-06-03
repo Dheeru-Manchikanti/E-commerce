@@ -1,15 +1,15 @@
 <?php
-// Check if user is logged in
+
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
+
 require_once '../includes/init.php';
 
-// Check if ID is provided
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     setFlashMessage('error', 'Product ID is required.', 'danger');
     header('Location: products.php');
@@ -18,7 +18,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $productId = (int)$_GET['id'];
 
-// Get product data
+
 $db->query("SELECT * FROM products WHERE id = :id");
 $db->bind(':id', $productId);
 $product = $db->single();
@@ -29,7 +29,7 @@ if (!$product) {
     exit();
 }
 
-// Get product categories
+
 $db->query("SELECT category_id FROM product_categories WHERE product_id = :product_id");
 $db->bind(':product_id', $productId);
 $productCategoriesResult = $db->resultSet();
@@ -38,7 +38,7 @@ foreach ($productCategoriesResult as $category) {
     $productCategories[] = $category['category_id'];
 }
 
-// Get all categories for form
+
 $db->query("SELECT * FROM categories WHERE parent_id IS NULL ORDER BY name");
 $parentCategories = $db->resultSet();
 
@@ -46,33 +46,33 @@ $allCategories = [];
 foreach ($parentCategories as $parent) {
     $allCategories[] = $parent;
     
-    // Get child categories
+
     $db->query("SELECT * FROM categories WHERE parent_id = :parent_id ORDER BY name");
     $db->bind(':parent_id', $parent['id']);
     $children = $db->resultSet();
     
     foreach ($children as $child) {
-        $child['name'] = '— ' . $child['name']; // Add indentation to show hierarchy
+        $child['name'] = '— ' . $child['name']; 
         $allCategories[] = $child;
     }
 }
 
-// Get product images
+
 $db->query("SELECT * FROM product_images WHERE product_id = :product_id ORDER BY sort_order");
 $db->bind(':product_id', $productId);
 $productImages = $db->resultSet();
 
-// Process form submission
+
 $formErrors = [];
 $formSuccess = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
-    // Validate CSRF token
+
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $formErrors[] = 'Invalid form submission.';
     } else if (!isset($_POST['product_id']) || (int)$_POST['product_id'] !== $productId) {
         $formErrors[] = 'Invalid product ID.';
     } else {
-        // Get and sanitize form data
+
         $name = sanitize($_POST['name']);
         $description = sanitize($_POST['description']);
         $price = filter_var($_POST['price'], FILTER_VALIDATE_FLOAT);
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
             $formErrors[] = 'Stock quantity must be a non-negative number.';
         }
         
-        // Check if SKU exists and is not this product's SKU
+
         if (!empty($sku) && $sku !== $product['sku']) {
             $db->query("SELECT id FROM products WHERE sku = :sku AND id != :id");
             $db->bind(':sku', $sku);
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
             }
         }
         
-        // Process image upload
+
         $image_main = $product['image_main']; // Keep existing image by default
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $new_image = uploadFile($_FILES['image'], UPLOADS_DIR, ['image/jpeg', 'image/png', 'image/gif']);
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
             }
         }
         
-        // Process additional images
+
         $newImages = [];
         if (isset($_FILES['additional_images'])) {
             $fileCount = count($_FILES['additional_images']['name']);
@@ -148,13 +148,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
             }
         }
         
-        // If no errors, update product in database
+
         if (empty($formErrors)) {
             try {
-                // Start transaction
                 $db->beginTransaction();
-                
-                // Update product
                 $db->query("UPDATE products SET 
                            name = :name, 
                            description = :description, 
@@ -182,8 +179,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                     throw new Exception("Failed to update product");
                 }
                 
-                // Update categories
-                // First, delete existing categories
                 $db->query("DELETE FROM product_categories WHERE product_id = :product_id");
                 $db->bind(':product_id', $productId);
                 
@@ -191,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                     throw new Exception("Failed to delete existing product categories");
                 }
                 
-                // Then add new categories
                 if (!empty($categories)) {
                     $values = [];
                     $params = [];
@@ -216,9 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                     }
                 }
                 
-                // Add new additional images
                 if (!empty($newImages)) {
-                    // Get current highest sort order
                     $db->query("SELECT MAX(sort_order) as max_order FROM product_images WHERE product_id = :product_id");
                     $db->bind(':product_id', $productId);
                     $maxOrderResult = $db->single();
@@ -238,12 +230,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                 
                 $formSuccess = 'Product updated successfully.';
                 
-                // Refresh product data
+
                 $db->query("SELECT * FROM products WHERE id = :id");
                 $db->bind(':id', $productId);
                 $product = $db->single();
                 
-                // Refresh product categories
+
                 $db->query("SELECT category_id FROM product_categories WHERE product_id = :product_id");
                 $db->bind(':product_id', $productId);
                 $productCategoriesResult = $db->resultSet();
@@ -252,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                     $productCategories[] = $category['category_id'];
                 }
                 
-                // Refresh product images
+
                 $db->query("SELECT * FROM product_images WHERE product_id = :product_id ORDER BY sort_order");
                 $db->bind(':product_id', $productId);
                 $productImages = $db->resultSet();

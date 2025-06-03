@@ -1,11 +1,11 @@
 <?php
-// Search API endpoint
+// Search API
 require_once '../includes/init.php';
 
-// Set headers for JSON response
+
 header('Content-Type: application/json');
 
-// Get search query
+
 $query = isset($_GET['q']) ? sanitize($_GET['q']) : '';
 
 if (empty($query) || strlen($query) < 2) {
@@ -16,7 +16,7 @@ if (empty($query) || strlen($query) < 2) {
     exit;
 }
 
-// Search products
+
 $searchTerms = '%' . $query . '%';
 
 $sql = "SELECT p.*, (SELECT image_path FROM product_images WHERE product_id = p.id LIMIT 1) as additional_image 
@@ -31,7 +31,7 @@ $db->bind(2, $searchTerms);
 $db->bind(3, $searchTerms);
 $products = $db->resultSet();
 
-// Format results
+
 $results = [];
 foreach ($products as $product) {
     $results[] = [
@@ -44,7 +44,7 @@ foreach ($products as $product) {
     ];
 }
 
-// Return JSON response
+
 echo json_encode([
     'status' => 'success',
     'products' => $results

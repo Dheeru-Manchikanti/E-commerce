@@ -1,20 +1,20 @@
 <?php
-// Check if user is logged in
+
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
+
 require_once '../includes/init.php';
 
-// Get products with pagination
+
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $itemsPerPage = 10;
 $offset = ($page - 1) * $itemsPerPage;
 
-// Count total products
+
 $db->query("SELECT COUNT(*) as total FROM products");
 $totalResult = $db->single();
 $totalProducts = $totalResult['total'];
@@ -40,13 +40,13 @@ $allCategories = [];
 foreach ($parentCategories as $parent) {
     $allCategories[] = $parent;
     
-    // Get child categories
+
     $db->query("SELECT * FROM categories WHERE parent_id = :parent_id ORDER BY name");
     $db->bind(':parent_id', $parent['id']);
     $children = $db->resultSet();
     
     foreach ($children as $child) {
-        $child['name'] = '— ' . $child['name']; // Add indentation to show hierarchy
+        $child['name'] = '— ' . $child['name'];
         $allCategories[] = $child;
     }
 }
@@ -54,11 +54,11 @@ foreach ($parentCategories as $parent) {
 // Process add product form
 $formErrors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
-    // Validate CSRF token
+
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $formErrors[] = 'Invalid form submission.';
     } else {
-        // Get and sanitize form data
+
         $name = sanitize($_POST['name']);
         $description = sanitize($_POST['description']);
         $price = filter_var($_POST['price'], FILTER_VALIDATE_FLOAT);
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             $formErrors[] = 'Stock quantity must be a non-negative number.';
         }
         
-        // Check if SKU exists
+
         if (!empty($sku)) {
             $db->query("SELECT id FROM products WHERE sku = :sku");
             $db->bind(':sku', $sku);
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             }
         }
         
-        // Process image upload
+
         $image_main = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $image_main = uploadFile($_FILES['image'], UPLOADS_DIR, ['image/jpeg', 'image/png', 'image/gif']);
@@ -209,15 +209,15 @@ if (isset($_GET['bulk']) && $_GET['bulk'] === 'success') {
             $actionText = 'processed';
     }
     setFlashMessage('success', 'Selected products have been ' . $actionText . ' successfully.', 'success');
-    // Redirect to clean URL
+
     header('Location: products.php');
     exit();
 }
 
-// Page title
+
 $pageTitle = 'Products';
 
-// Additional JS
+
 $additionalJS = [
     '../assets/js/products.js'
 ];
@@ -229,10 +229,10 @@ $additionalJS = [
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Products</h1>
         <div>
-            <a href="reset-auto-increment.php" class="btn btn-outline-info me-2" title="Reset Auto-Increment IDs">
+            <a href="reset-auto-increment.php" class="btn btn-outline-info me-2" style= "display:none;" title="Reset Auto-Increment IDs">
                 <i class="fas fa-sync-alt"></i> Reset IDs
             </a>
-            <a href="bulk-image-upload.php" class="btn btn-success me-2">
+            <a href="bulk-image-upload.php" class="btn btn-success me-2" style= "display:none;">
                 <i class="fas fa-images"></i> Bulk Image Upload
             </a>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">

@@ -1,11 +1,10 @@
 <?php
-// Start session
 session_start();
 
 // Include database and functions
 require_once 'includes/init.php';
 
-// Check if user is logged in
+
 if (!isset($_SESSION['user_id'])) {
     // Redirect to login page with return URL
     header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
@@ -41,7 +40,7 @@ try {
     ];
 }
 
-// Add a dev-only debug feature that can be enabled when needed
+
 $debugMode = false;
 if ($debugMode) {
     echo '<div style="background: #f5f5f5; border: 1px solid #ddd; padding: 10px; margin: 10px 0; font-family: monospace;">';
@@ -71,7 +70,6 @@ $updateSuccess = '';
 $updateError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $updateError = 'Invalid form submission. Please try again.';
     } else {

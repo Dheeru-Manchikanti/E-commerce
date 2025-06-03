@@ -1,17 +1,16 @@
 <?php
-// Cart API endpoint
+// Cart API
 require_once '../includes/init.php';
 
-// Set headers for JSON response
+
 header('Content-Type: application/json');
 
-// CSRF protection for non-GET requests
+
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    // Check for CSRF token in header
+
     $headers = getallheaders();
     $token = isset($headers['X-CSRF-Token']) ? $headers['X-CSRF-Token'] : null;
     
-    // If token not in header, check POST data
     if (!$token && isset($_POST['csrf_token'])) {
         $token = $_POST['csrf_token'];
     }

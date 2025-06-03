@@ -1,11 +1,10 @@
 <?php
-// Start session
 session_start();
 
-// Include database and functions
+
 require_once 'includes/init.php';
 
-// Check if user is logged in
+
 if (!isset($_SESSION['user_id'])) {
     // Redirect to login page with return URL
     header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
@@ -50,7 +49,6 @@ $success = '';
 
 // Process address form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate CSRF token
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $error = 'Invalid form submission. Please try again.';
     } else {
@@ -153,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Process deletion
 if (isset($_POST['delete']) && $isEdit) {
-    // Validate CSRF token
+
     if (!isset($_POST['delete_csrf_token']) || !verifyCSRFToken($_POST['delete_csrf_token'])) {
         $error = 'Invalid form submission. Please try again.';
     } else {

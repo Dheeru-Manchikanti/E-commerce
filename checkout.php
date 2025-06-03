@@ -1,5 +1,4 @@
 <?php
-// Start session
 session_start();
 
 // Checkout page
@@ -33,13 +32,12 @@ $savedAddresses = [];
 if ($isLoggedIn) {
     $userId = $_SESSION['user_id'];
     
-    // Get user data
+
     $db->query("SELECT * FROM users WHERE id = :id");
     $db->bind(':id', $userId);
     $user = $db->single();
     
     if ($user) {
-        // Pre-fill customer information with fallback values for safety
         $customer['first_name'] = !empty($user['first_name']) ? $user['first_name'] : 'Will';
         $customer['last_name'] = !empty($user['last_name']) ? $user['last_name'] : 'Smith';
         $customer['email'] = !empty($user['email']) ? $user['email'] : $_SESSION['user_email'] ?? '';
@@ -54,11 +52,8 @@ if ($isLoggedIn) {
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check if using saved address
     if (isset($_POST['use_saved_address']) && !empty($_POST['saved_address_id']) && $isLoggedIn) {
         $savedAddressId = (int)$_POST['saved_address_id'];
-        
-        // Get selected address
         $db->query("SELECT * FROM user_addresses WHERE id = :id AND user_id = :user_id");
         $db->bind(':id', $savedAddressId);
         $db->bind(':user_id', $userId);

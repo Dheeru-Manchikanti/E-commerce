@@ -1,34 +1,30 @@
 <?php
-// Check if user is logged in
+// Bulk Image upload is yet to be implemented
+
+
 session_start();
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Include database and functions
 require_once '../includes/init.php';
-
-// Get all categories for filter
 $db->query("SELECT * FROM categories WHERE parent_id IS NULL ORDER BY name");
 $parentCategories = $db->resultSet();
 
 $allCategories = [];
 foreach ($parentCategories as $parent) {
     $allCategories[] = $parent;
-    
-    // Get child categories
     $db->query("SELECT * FROM categories WHERE parent_id = :parent_id ORDER BY name");
     $db->bind(':parent_id', $parent['id']);
     $children = $db->resultSet();
     
     foreach ($children as $child) {
-        $child['name'] = '— ' . $child['name']; // Add indentation to show hierarchy
+        $child['name'] = '— ' . $child['name'];
         $allCategories[] = $child;
     }
 }
 
-// Process form submission for bulk uploading
 $formErrors = [];
 $formSuccess = '';
 $processedCount = 0;
@@ -225,7 +221,7 @@ $additionalJS = [
         </div>
     <?php endif; ?>
     
-    <?php if (error_reporting() > 0): // Only show in debug mode ?>
+    <!-- <?php if (error_reporting() > 0): // Only show in debug mode ?>
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Upload Directory Information</h6>
@@ -242,20 +238,20 @@ $additionalJS = [
                 <p><strong>post_max_size:</strong> <?php echo ini_get('post_max_size'); ?></p>
             </div>
         </div>
-    <?php endif; ?>
+    <?php endif; ?> -->
     
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Upload Images to Multiple Products</h6>
         </div>
         <div class="card-body">
-            <div class="alert alert-info">
+            <!-- <div class="alert alert-info">
                 <p><strong>Note:</strong> This tool allows you to upload images to multiple products at once. The images will be distributed evenly among the selected products.</p>
                 <p>Image Sources: <a href="https://unsplash.com/collections/8172554/e-commerce-products" target="_blank">Unsplash</a>, 
                 <a href="https://www.pexels.com/search/product/" target="_blank">Pexels</a>, 
                 <a href="https://pixabay.com/images/search/product/" target="_blank">Pixabay</a>, or 
                 <a href="https://placehold.co/" target="_blank">Product Placeholder</a>.</p>
-            </div>
+            </div> -->
             
             <form method="post" action="bulk-image-upload.php" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
@@ -282,7 +278,7 @@ $additionalJS = [
                     </div>
                 </div>
                 
-                <!-- Category selection (shown when category mode selected) -->
+
                 <div class="mb-4" id="category_section" style="display: none;">
                     <label for="category_id" class="form-label">Select Category</label>
                     <select class="form-control" id="category_id" name="category_id">
@@ -295,13 +291,13 @@ $additionalJS = [
                     </select>
                 </div>
                 
-                <!-- Product IDs input (shown when specific mode selected) -->
+
                 <div class="mb-4" id="products_section" style="display: none;">
                     <label for="product_ids" class="form-label">Product IDs</label>
                     <input type="text" class="form-control" id="product_ids" name="product_ids" placeholder="Enter product IDs separated by commas (e.g., 1,2,3)">
                 </div>
                 
-                <!-- Image options -->
+
                 <div class="mb-4">
                     <label class="form-label">Image Options</label>
                     <div class="form-check">
@@ -318,7 +314,7 @@ $additionalJS = [
                     </div>
                 </div>
                 
-                <!-- Image upload -->
+
                 <div class="mb-4">
                     <label for="images" class="form-label">Select Images</label>
                     <input type="file" class="form-control" id="images" name="images[]" multiple accept="image/jpeg,image/png,image/gif">
@@ -335,10 +331,10 @@ $additionalJS = [
     </div>
 </div>
 
-<!-- Add JavaScript to handle form display logic -->
-<script>
+
+<!-- <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Mode selection
+
     const modeAll = document.getElementById('mode_all');
     const modeCategory = document.getElementById('mode_category');
     const modeSpecific = document.getElementById('mode_specific');
@@ -402,9 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initial update
     updateSections();
 });
-</script>
+</script> -->
 
 <?php include 'includes/footer.php'; ?>

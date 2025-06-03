@@ -1,9 +1,7 @@
 <?php
 require_once 'config.php';
 
-/**
- * Database connection class
- */
+
 class Database {
     private $host = DB_HOST;
     private $user = DB_USER;
@@ -14,9 +12,7 @@ class Database {
     private $error;
     private $stmt;
     
-    /**
-     * Constructor - establishes database connection
-     */
+    
     public function __construct() {
         // Set DSN (Data Source Name)
         $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname . ';charset=utf8mb4';
@@ -38,22 +34,11 @@ class Database {
         }
     }
     
-    /**
-     * Prepare statement with query
-     * 
-     * @param string $query - The SQL query to prepare
-     */
     public function query($query) {
         $this->stmt = $this->conn->prepare($query);
     }
     
-    /**
-     * Bind values to prepared statement
-     * 
-     * @param string $param - Parameter name/placeholder
-     * @param mixed $value - The value to bind
-     * @param mixed $type - Optional parameter type
-     */
+    
     public function bind($param, $value, $type = null) {
         if(is_null($type)) {
             switch(true) {
@@ -74,11 +59,7 @@ class Database {
         $this->stmt->bindValue($param, $value, $type);
     }
     
-    /**
-     * Execute the prepared statement
-     * 
-     * @return boolean
-     */
+
     public function execute() {
         try {
             return $this->stmt->execute();
@@ -98,58 +79,38 @@ class Database {
         return $this->stmt->fetchAll();
     }
     
-    /**
-     * Get single record as object
-     * 
-     * @return object
-     */
+    
     public function single() {
         $this->execute();
         return $this->stmt->fetch();
     }
     
-    /**
-     * Get record count
-     * 
-     * @return int
-     */
+   
     public function rowCount() {
         return $this->stmt->rowCount();
     }
     
-    /**
-     * Get last inserted ID
-     * 
-     * @return int
-     */
+    
     public function lastInsertId() {
         return $this->conn->lastInsertId();
     }
     
-    /**
-     * Begin a transaction
-     */
+    
     public function beginTransaction() {
         return $this->conn->beginTransaction();
     }
     
-    /**
-     * Check if a transaction is active
-     */
+   
     public function inTransaction() {
         return $this->conn->inTransaction();
     }
     
-    /**
-     * End a transaction and commit
-     */
+   
     public function commit() {
         return $this->conn->commit();
     }
     
-    /**
-     * Cancel a transaction and roll back
-     */
+    
     public function rollBack() {
         return $this->conn->rollBack();
     }

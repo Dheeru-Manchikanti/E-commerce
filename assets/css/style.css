@@ -1,4 +1,3 @@
-/* Base Styles */
 :root {
   --primary-color: #4e73df;
   --secondary-color: #6c757d;
@@ -25,7 +24,6 @@ a {
   color: var(--primary-color);
 }
 
-/* Admin Panel Styles */
 #admin-wrapper {
   display: flex;
   min-height: 100vh;
@@ -124,7 +122,6 @@ a {
   padding: 1.25rem;
 }
 
-/* Table Styling */
 .table-responsive {
   overflow-x: auto;
 }
@@ -149,7 +146,6 @@ a {
   background-color: #f8f9fc;
 }
 
-/* Form Styling */
 .form-control {
   display: block;
   width: 100%;

@@ -1,8 +1,6 @@
 <?php
-// Start session
 session_start();
 
-// Include database and functions
 require_once 'includes/init.php';
 
 // Check if user is logged in
