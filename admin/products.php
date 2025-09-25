@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
                     throw new Exception("Failed to create product");
                 }
                 
-                $productId = $db->lastInsertId();
+                $productId = $db->lastInsertId('products_id_seq');
                 
                 // Make sure we have a valid product ID
                 if (!$productId) {

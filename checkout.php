@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->bind(':country', $customer['country']);
                 $db->execute();
                 
-                $customerId = $db->lastInsertId();
+                $customerId = $db->lastInsertId('customers_id_seq');
             }
             
             // Prepare order data
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->bind(':payment_method', $payment_method);
                 $db->execute();
                 
-                $orderId = $db->lastInsertId();
+                $orderId = $db->lastInsertId('orders_id_seq');
                 
                 // Create order items and update inventory
                 foreach ($productIds as $productId) {

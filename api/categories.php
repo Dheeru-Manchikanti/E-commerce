@@ -306,14 +306,13 @@ switch ($action) {
             }
             $db->bind(':status', $status);
             
-            if ($db->execute()) {
-                $newCategoryId = $db->lastInsertId();
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Category created successfully',
-                    'id' => $newCategoryId
-                ]);
-            } else {
+                                if ($db->execute()) {
+                                    $newCategoryId = $db->lastInsertId('categories_id_seq');
+                                    echo json_encode([
+                                        'status' => 'success',
+                                        'message' => 'Category created successfully',
+                                        'id' => $newCategoryId
+                                    ]);            } else {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Failed to create category'

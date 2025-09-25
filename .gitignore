@@ -5,3 +5,4 @@
 
 # PHP temp files
 php_errors.log
+.DS_Store 

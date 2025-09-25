@@ -92,8 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $db->execute();
             
             if ($result) {
-                $userId = $db->lastInsertId();
-                
+                            $userId = $db->lastInsertId('users_id_seq');                
                 // In a production environment, send verification email here
                 // For now, we'll just mark the user as verified
                 $db->query("UPDATE users SET email_verified = 1 WHERE id = :id");
